@@ -1,0 +1,315 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//_________initialise_processes_and_global_vars__________
+//frames problems
+				PAUSE = false;
+				FPS_stable = 120; time_slow = 1; timer = 0; sec; var updates:Number = 0; var timeElapsed:Number = 0;	//stable fps, time_slow as a koefficent of time capacity
+							tim = 0; upd = 0; tE = 0; G = .15;
+//global enterframe
+	onEnterFrame = function (){
+		//__________________FPS_ISSUES__________________
+				current_fps = _root.menu.fps.fps;							//get an fps from fps counter
+				sec = FPS_stable/current_fps; timer+=sec*time_slow*(!PAUSE);//editing sec and adding its to timer
+				timeElapsed = sec*time_slow*(!PAUSE);					 			//how much time was spend from previous sec
+				updates = 0; while (timer>1){ timer--; updates++; } 		//now we have enougth updates to do with each component of this world
+				/*special one for thos who can not be paused (console, fps menues etc)*/
+				tim+=sec*time_slow; tE = sec*time_slow;  upd = 0; while (tim>1){ tim--; upd++; } 
+		//_______________SOUND_LIB_LOADING_______________
+				max = 0; now = 0; ld.text = "";																								// проход по всем звукам
+				for (var i=0; i<sounds.length; i++)																							// если звук не забупан, то их текущий\мак размер добавляются в сумму
+					{	if (sounds[i].isBoop != true){max += sounds[i].getBytesTotal(); now += sounds[i].getBytesLoaded(); }				// считается и выводится в общий текстбокс процент загрузки незабупаных звуков
+						pc = Math.round(100*sounds[i].getBytesLoaded()/sounds[i].getBytesTotal()); ld.text += " "+pc+"%"					// в случае, если показатель загрузки NaN - звук не может быть загружен
+						if (isNaN(pc) && !sounds[i].isBoop)	{trace(sounds[i].name +' corrupted!'); temp = sounds[i].name;					// перехватываем его и под тем же именем суем в него предварительно отэкспорченный буп
+							sounds[i] = new Sound(); sounds[i].name = temp; sounds[i].attachSound("boop"); sounds[i].isBoop = true;} 		// буп, если что, можно заменить на тишину, или просто убрать соответствующие строки
+					}
+				if (now == max && !all_sounds_loaded){all_sounds_loaded = true; console_trace('> Sound library loaded ('+get_sounds+'/'+await_sounds+')');}	
+	}
+//menu_problems
+//cameram which foolows menu_handler
+	_root.attachMovie("cam","cam",_root.getNextHighestDepth()); cam._width = 600; cam._height = 400; cam._x = menu._x; cam._y = menu._y;
+//menu handler
+	_root.attachMovie("menu_handler","menu",_root.getNextHighestDepth());
+			_root.menu._width = 600; _root.menu._height = 400; _root.menu._x = 300; _root.menu._y = 200; _root.menu._visible = true; _root.menu._alpha = 100;
+			menu.amp = menu.dir = 0; menu.kX = cam._xscale / menu._xscale; menu.kY = cam._yscale / menu._yscale;
+			menu.onEnterFrame = function (){
+				cam._xscale = this._xscale * this.kX; cam._yscale = this._yscale * this.kY;
+				cam._x = this._x+Math.cos(this.dir)*this.amp; cam._y = this._y+Math.sin(this.dir)*this.amp; if (this.amp>0){this.amp-=.25; this.dir+=Math.PI/3*2;}}
+//menu _console
+	_root.menu.attachMovie("console","console",_root.menu.getNextHighestDepth());  _root.menu.console._y = -200; menu.console.need_trace = new Array("> Message stack test;","> Message stack is ready;");
+	function console_trace (messag:String){menu.console.need_trace.push( messag ); }
+//menu fps (in itself)
+	_root.menu.attachMovie("fps_counter","fps",_root.menu.getNextHighestDepth()); _root.menu.fps._x = -300; _root.menu.fps._y = -200; _root.menu.fps.blendMode = 10;
+//sound handler for menu_clicks
+	_root.menu.attachMovie("sound_handler","sounder",_root.menu.getNextHighestDepth()); _root.menu.sounder._x = -300; _root.menu.sounder._y = -180;  _root.menu.sounder._visible = false;
+
+console_trace( "> Console is ready; Camera is ready; Fps counter is ready;" );
+//menu._xscale /= 2; menu._yscale /=2; menu._y = mouse._y - 50; menu._x = mouse._x;
+
+//frame solving
+	function animate (who:MovieClip, startFrame, finishFrame, speed:Number, direct){//animate an object according to improoved timeline
+			//direct -1 or 1 :: a side where do you wish to animate
+			if (who == null) return;
+			if (isNaN(who.anim)) {console_trace("# Warning! Object ("+who+") can not be animate cause do not have an 'anim' property!"); return; }	//error
+			if (isNaN(direct))direct = 1;	//default direction of animating is from left to right
+			if (who.anim%speed == 0 || isNaN(speed)){
+				fr = who._currentframe; fr += direct; if (fr<startFrame)fr = finishFrame; if (fr>finishFrame)fr = startFrame;	//increasing or descresing a frame counter
+				who.gotoAndStop(fr);	//applying changes
+	}}
+//finding a frame in movieclip by name
+	function getByName (who:MovieClip, nam:String):Number{
+		temp = who._currentframe; who.gotoAndStop(nam); res = who._currentframe; who.gotoAndStop(temp);
+		return res;
+	}
+console_trace( "> Animation function block is ready;");
+
+//levle design problems
+	//sounder
+		_root.attachMovie("sounder_footsteps","fts",_root.getNextHighestDepth());_root.fts._visible = false;
+		function footstep_sound (typ:MovieClip){ pochva = 1; _root.sound_start(ground_types[pochva]+""+(1+random(ground_nums[pochva]))); }
+		function other_sound (typ:String){ _root.fts.gotoAndPlay(typ); }
+	
+//character human movement problems
+	function set_body(body:MovieClip, legs:MovieClip){
+		body.legs = legs; body.xs = body._xscale; body.stat = "idle"; body.anim = 0; body.stop();
+	}
+	function being_body(body:MovieClip){
+		body._y = body.legs._y + body.legs.taz._y;  body._rotation = body.legs.taz._rotation * (body.legs.taz._xscale / Math.abs(body.legs.taz._xscale));
+		body._xscale = body._parent.sp_x / Math.abs(body._parent.sp_x ) * body.xs;			//_xscale as sp_x of parent
+		body.anim++;
+		animate(body,getByName(body,body.stat+"_start"),getByName(body,body.stat+"_stop"),body.anim_spd);//animating
+	}
+	function autoAnimate( who:MovieClip ){
+		if (who.stat == undefined) {console_trace("# ("+who + ") can not be auto-animated. Cause it do not have 'stat'"); return;} 	//have no state
+		if (who.anim == undefined) {console_trace("# ("+who + ") can not be auto-animated. Cause it do not have 'anim'"); return;}		//have no anim
+		who.anim++; if (who.anim_spd == undefined) who.anim_spd = 2;	//if have no speed
+		animate(who,getByName(who,who.stat+"_start"),getByName(who,who.stat+"_stop"),who.anim_spd);//animating
+	}
+	
+//character control problems
+	function set_controlable (who:MovieClip,keys:Array, maxXspeed:Number, jumpHeigth:Number){
+		who.keyBinds = keys;	// left | right | up | down | 
+		who.keypresses = new Array(); for (var i=0; i<keys.length; i++) keypresses.push(0);
+		who.sp_x_max = maxXspeed; who.jump_heigth = jumpHeigth;
+	}
+//moveble character
+	function set_moveble (who:MovieClip, acseleration:Number, desacseleration_k:Number, jumpBack:Number,  mass:Number){
+		who.sp_x = 0; who.sp_x0 = 0; who.sp_y0 = 0; who.acs = acseleration;  who.tormoz = desacseleration_k;
+		who.sp_y = 0; who.ground = false; 
+		if (mass == undefined) who.mass = 1; else who.mass = mass; if (jumpBack == undefined) who.jumpBack = 0; else who.jumpBack = jumpBack;
+	}
+//being a moveble thing (даже тумбочка и золодильник должны это использывать)
+	function being_moveble (who:MovieClip, ignore_ground:Boolean){
+	//default values
+	if (ignore_ground == undefined) ignore_ground = false;
+		for (var tick = 0; tick<_root.updates; tick++){
+			if (Math.abs(who.sp_x0) > 0.1) who.sp_x0 /= Math.pow(who.tormoz,.25); else who.sp_x0 = 0;								//F трения 
+			if (!who.ground){ who.sp_y += G*who.mass; if (!ignore_ground){if (defineGround(who)){if (who.jumpBack == 0){ who.ground = true; who.sp_y = 0; if (who.sp_y0>0) who.sp_y0 = 0; }
+																/*otskok ili finish*/ else{ if (Math.abs(who.sp_y)>=1){ if (Math.abs(who.sp_y)>=4)footstep_sound(); who.sp_y0 = -who.jumpBack*who.sp_y; who.sp_y = 0;} else {who.ground = true; who.sp_y = 0; who.sp_y0 = 0;}}}}}
+										//landing
+		//movement applyes
+			who._x += who.sp_x + who.sp_x0;
+			who._y += who.sp_y + who.sp_y0; 
+	}}
+	
+//define is object on ground oe not
+	function defineGround (who:MovieClip):Boolean{
+		//maximum
+		if (who._y >= 360){ who._y = 360; return true; }
+		return false;
+	}
+	
+//on every frame (non update depending)
+	function being_controlable (who:MovieClip){
+		for (var tick = 0; tick<_root.updates; tick++){
+			//rejoice with a keys
+				for (var i=0; i<who.keyBinds.length; i++) if (Key.isDown(who.keyBinds[i])) who.keypresses[i]++; else who.keypresses[i]=0;
+			//move accept from keys
+				//if left | right pressed increase speed
+					if (who.keypresses[1]>0 && who.keypresses[0]==0) who.sp_x += who.acs * (who.sp_x < who.sp_x_max);
+					if (who.keypresses[0]>0 && who.keypresses[1]==0) who.sp_x -= who.acs * (who.sp_x > -who.sp_x_max);
+				//descresing speed when nothing is presseds
+					if (who.ground && !((who.keypresses[0]>0 && who.sp_x<0) || (who.keypresses[1]>0 && who.sp_x>0)))if (Math.abs(who.sp_x)>.1)who.sp_x /= who.tormoz; else who.sp_x = 0;
+				//watching a jumping
+					if (who.keypresses[2] == 1 && who.ground){ who.sp_y = -who.jump_heigth; who._y -= 5; who.ground = false;}
+	}
+}
+
+
+
+//hitable shits
+	function set_health ( who:MovieClip, healthMax:Number, regen:Number ){
+		who.hpwas = who.hp = who.hpmax = healthMax; who.regenedHealth = 0; who.regenSpd = regen;
+		who.dead = false; who.hited = 0;	//times hited
+	}
+	function being_hitable( who:MovieClip ){
+		if (who.hited>0)who.hited = 0;
+		for (var tick = 0; tick < updates; tick++){
+			//is barely alife problems
+				if (who.hp <=0 || who.dead){ who.dead = true; who.hp = 0; return;}
+			//regeneration problems
+				if (who.hp < who.hpmax){ who.regenedHealth += who.regenSpd; while (who.regenedHealth>1){ who.regenedHealth--; who.hp = Math.min(who.hpmax, who.hp+1); } }
+			//accepting a hit
+				if (who.hp <= who.hpwas-1)who.hited++; who.hpwas = who.hp;
+		}
+	}
+	
+console_trace( "> Object's interfaces block is ready;");
+	
+
+//flying things
+//_root.export_object (where, path, timer, x0, y0, sp_x0 (0), sp_y0 (0), acs (0), tormoz (1.05), mass(1),  ignore_ground (false), jumpBack (0));
+
+obs_fly = -1; last_exported = null;
+	function export_object (where, path:String, time:Number, x0, y0, sp_x0, sp_y0, acs, tormoz, mass , ignore_ground ,  jumpBack ){
+		//default values
+			if (where == undefined){ console_trace('# No place '+where); return; } if (path == undefined){ console_trace('# No path: '+where); return; }
+			if (time == undefined) time = FPS_stable * 10; /*if time == -1 then this object will not be remooved*/
+			if (x0 == undefined || y0 == undefined){ console_trace('# Place is incorrect'); return;}
+			if (sp_x0 == undefined) sp_x0 = 0;  if (sp_y0 == undefined) sp_y0 = 0; if (acs == undefined) acs = 0;  if (tormoz == undefined) tormoz = 1.05;
+			if (mass == undefined) mass = 1; if (jumpBack == undefined) jumpBack = 0; if (ignore_ground == undefined) ignore_ground = false;
+ 		//______________________________
+				//exporting from library
+					obs_fly ++;  where.attachMovie(path, "ob_fl_"+obs_fly, where.getNextHighestDepth()); s = where["ob_fl_"+obs_fly];
+				//set vairables
+						set_moveble(s,acs, tormoz, jumpBack, mass); s._x = x0; s._y = y0; s.sp_x0 = sp_x0; s.sp_y = sp_y0; s.stop();  s.ignore_ground = ignore_ground; s.timer = time;
+				//move as you want
+						s.onEnterFrame = function (){ _root.being_moveble(this, ignore_ground); if (timer>0){this.timer -= _root.timeElapsed; if (this.timer<=0 || ! this.hitTest(_root.cam))this.removeMovieClip();} }
+				//add to linkage
+						last_exported = s;
+	}
+//effect exporting
+ef_sc = -1; lastEffect = null;
+	function export_effect (where, path:String, x0, y0, angle){
+		ef_sc ++;  where.attachMovie(path+"_effect", "ef_sc_"+ef_sc, where.getNextHighestDepth()); e = where["ef_sc_"+ef_sc];
+		e._x = x0; e._y= y0; e._rotation =( angle )/Math.PI*180;
+		lastEffect = e;
+	}
+	
+console_trace( "> Object's export block is ready;");
+	
+
+	
+//____________SHOOOTING___THINGS_________________
+	//DEFAULT BULLET SPEEDS
+		bullet_types_array = new Array("pistol_bullet","slow_bullet");
+		bullet_speed_array = new Array(              7,            2);
+		bullet_spread_array= new Array(              6,            6);
+
+	_root.attachMovie("bullets_layer","hero_bullets",_root.getNextHighestDepth());
+//shoot a bullet
+		hero_bul = -1; last_bullet = null;
+		function spawn_a_bullet( where:MovieClip, bullet_path:String, x0, y0, spd, ang, spread, spread_stat){
+			//calculate default speed
+					ok = false; if (spd == 'default' || spread == 'default'){for (var i=0; i<bullet_types_array.length; i++)     if ((bullet_types_array[i]+"").indexOf(bullet_path+"")>=0)
+						{ if (spd == 'default')spd = bullet_speed_array[i];  if (spread == 'default')spread = bullet_spread_array[i]; ok = true; break; }
+					if (!ok){console_trace("# No default speed for bullet '"+bullet_path+"'"); return;}}
+			//spawn_a_bulelt
+					hero_bul++; 
+					where.attachMovie(bullet_path,"hero_bul_"+hero_bul, where.getNextHighestDepth());  b = where["hero_bul_"+hero_bul];
+					b._x = x0; b._y = y0; b.spd = spd; b.ang = ang; 
+			//spawn spread
+				for (var i= 0; i<spread; i++)spawn_a_spread (hero_bullets, x0, y0, ang, spd, spread_stat, .001*(random(6)+5)+1);
+			//links
+				last_bullet = b;
+		}
+		sprd = -1;
+		function spawn_a_spread (where:MovieClip, x0, y0, ang, spd_bul, stat, degrad){
+			sprd++; where.attachMovie("bullet_fly_out","bl_sprd"+sprd, where.getNextHighestDepth()); s = where["bl_sprd"+sprd]; 
+					s._x = x0; s._y = y0; s.ang = ang; s.stat = stat; s.timer = timer; s.spd = Math.max(1,Math.min(3,spd_bul/3))*(random(80)/100+.3)*(1+.2*random(6)*(random(50)==0));
+					s.degrade_speed = degrad;
+		}
+console_trace( "> Bullet physics block is ready;")
+		
+/__________________
+//делает пушку пушкой
+//function set_a_gun(GUN, bullet_type (pistol_bullet), bullet_spread(0), realoadPartly(18), ammo(6), reloadFull(100), automatic(false), host_dist(20), ammo_per_shot(1), bullet_per_shot(1), otadat(10))
+	function set_a_gun (who:MovieClip, bullet_type:String, bullet_spread:Number, realoadPartly:Number, ammo:Number, reloadFull:Number, automatic:Boolean, host_dist:Number, ammo_per_shot:Number, bullet_per_shot:Number, otdat:Number){
+		if (who == null) return; who.stop();
+		if (bullet_type == undefined)who.bullet_type = "pistol_bullet"; else who.bullet_type = bullet_type;			//тип пуль
+		if (bullet_spread == undefined)who.bullet_spread = 0; else who.bullet_spread = bullet_spread;				//разброс угол
+		if (realoadPartly == undefined)who.realoadPartly = 18; else who.realoadPartly = realoadPartly;					//перерыв между соседними выстрелами
+		if (reloadFull == undefined)who.reloadFull = 100; else who.reloadFull = reloadFull;							//по истечению обоймы перезарядка
+		if (ammo == undefined)who.ammo = 6; else who.ammo = ammo;													//магазин
+		if (automatic == undefined)who.automatic = false; else who.automatic = automatic;							//автоматическая ли стрельба?
+		if (host_dist == undefined)who.host_dist = 20; else who.host_dist = host_dist;								//расстояние, на котором владелец держит пушку
+		if (otdat == undefined)who.otdat = 10; else who.otdat = otdat;												//отдача при вылете 1(!!!!!) пули
+		if (ammo_per_shot == undefined)who.ammo_per_shot = 1; else who.ammo_per_shot = ammo_per_shot;				//затраченые на 1 выстрел патроны
+		if (bullet_per_shot == undefined)who.bullet_per_shot = 1; else who.bullet_per_shot = bullet_per_shot;		//количество пуль, вылетающих при выстреле
+		
+		who.watchR = 0; who.ys = who._yscale; who.reload_timer = 0; who.current_ammo = who.ammo; who.host = null; who.watch1 = 0; who.ot_dist = 0;
+	}
+//назначает пушке владельца
+	function set_a_gun_host (gun:MovieClip, host:MovieClip){
+		gun.host = host;
+	}
+//being a GUN
+	function being_a_gun (gun:MovieClip){
+		//если нет хозяина, то это просто валяющийся кусок железа
+			if (gun.host == undefined || gun.host == null)return;				//no host check
+		//каждый кадр смотреть туда, куда целится хозяин. Вне времени.
+		if (gun.host.followX == undefined || gun.host.followY == undefined){console_trace("# "+gun+"'s has no 'follow' variable!"); return;}
+		if (gun.host.gunYoffset == undefined)gun.host.gunYoffset = 0;
+			if(timeElapsed>0)ang = Math.atan2( gun.host._y + gun.host.gunYoffset - gun.host.followY, gun.host._x - gun.host.followX ) + Math.PI;		//angle_calculate
+			gun._rotation = ang/Math.PI*180; gun._yscale = (2*(gun._rotation > -90 && gun._rotation < 90)-1)*gun.ys;
+			if (Math.abs(gun.ot_dist)<.1)gun.ot_dist = 0; else gun.ot_dist/=1.1;
+			gun._x = gun.host._x + Math.cos(ang)* (gun.host_dist - gun.ot_dist); gun._y = gun.host._y + gun.host.gunYoffset + Math.sin(ang) * (gun.host_dist - gun.ot_dist);
+		//пристрелки и все в таком духе
+			shot_this_frame = false;
+			for (var tick = 0; tick<_root.updates; tick++){
+				if (Key.isDown(1))gun.watch1++; else gun.watch1 = 0; if (Key.isDown(82))gun.watchR++; else gun.watchR = 0;			//when mouse is clicked || R is pressed
+					gun.reload_timer -= (gun.reload_timer>0)*1;
+				//reload
+					if (gun.reload_timer<=0 && gun.current_ammo > 0 && gun.watch1 != 1 && gun.watchR == 1)
+						{ gun.reload_timer += gun.reloadFull; gun.ost = gun.current_ammo; gun.current_ammo = gun.ammo; gun.gotoAndStop('hand_reload'); }
+				//shoot
+					if (!shot_this_frame && gun.reload_timer<=0 && ((!gun.automatic && gun.watch1 == 1) || (gun.automatic && gun.watch1 > 0))){ /*SHOT*/ 
+						//attach a bullet
+								shot_this_frame = true;																														// в этот кадр уже стреляли
+							if (gun.current_ammo >= gun.ammo_per_shot){ gun.current_ammo -= gun.ammo_per_shot; 
+								if (gun.current_ammo > 0) {gun.reload_timer += gun.realoadPartly; gun.gotoAndStop('fire');}													// обойма езе не кончилась \ спавн звук выстрела
+													else  {gun.reload_timer += gun.realoadPartly+gun.reloadFull; gun.current_ammo = gun.ammo; gun.gotoAndStop('reload'); gun.ost = 0;}	// обойма кончилась \ спавн звук перезарядки
+								dulo_x = gun._x + Math.cos(gun._rotation/180*Math.PI) * (gun.dulo._x)  + Math.cos(gun._rotation/180*Math.PI+Math.PI/2) * gun.dulo._y *gun._yscale/gun.ys;		// просчет точки вылета пули из ствола
+								dulo_y = gun._y + Math.sin(gun._rotation/180*Math.PI) * (gun.dulo._x)  + Math.sin(gun._rotation/180*Math.PI+Math.PI/2) * gun.dulo._y*gun._yscale/gun.ys;
+								export_effect (hero_bullets, "pistol_shoot", dulo_x, dulo_y, gun._rotation/180*Math.PI);
+								for (var shot=0; shot<gun.bullet_per_shot; shot++){																							// для каждой пули спавнить ее и увеличивать отдачу
+										gun.ot_dist += gun.otdat; 
+										gun.host.sp_x0 += - 0.02*gun.otdat * Math.cos(gun._rotation / 180 * Math.PI);
+										spawn_a_bullet (hero_bullets, gun.bullet_type, dulo_x, dulo_y, 'default', gun._rotation/180*Math.PI + random(Math.round(gun.bullet_spread*1000))/1000 - gun.bullet_spread/2, 'default', random(3)+1);}}// bullet_spawn
+						}
+					}
+			tst.text = gun.current_ammo + '/' + gun.ammo +'/'+ gun.reload_timer;
+	}
+	
+	console_trace( "> Gun logick block is ready;")
+//spawn_a_bullet( where:MovieClip, bullet_path:String, x0, y0, spd, ang, spread:Number, spread_stat
+////_root.set_a_gun(this, "pistol_bullet", Math.PI/3, 5, 60, 0, true, 40, 3, 3, 1)					//triple machinegun insane
+	_root.attachMovie("single_pistol", "sp0", _root.getNextHighestDepth()); 
+	set_a_gun (sp0); set_a_gun_host(sp0, mouse); sp0.onEnterFrame = function (){ _root.being_a_gun(this); }
+
