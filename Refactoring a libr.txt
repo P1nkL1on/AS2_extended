@@ -1,0 +1,41 @@
+
+
+
+
+
+
+
+
+
+Folder = 'mice_engine_sound_lib';																								//папка, в которой находится библиотека звуков
+//libr - массив с названиями (путями) до файлов из текущего места без учета окончания ,mp3
+libr = new Array();
+player_models = new Array('mouse'); player_sounds = new Array('jump','hited','dead');
+for (var i=0; i<player_models.length; i++)for (var j=0; j<player_sounds .length; j++) libr.push("player/"+player_models[i]+'/'+player_sounds [j]);
+weapon_types = new Array('pistol','shotgun','sawed_off'); weapon_actions = new Array('fire','reload','equip');
+for (var i=0; i<weapon_types.length; i++)for (var j=0; j<weapon_actions.length; j++) libr.push("weapons/"+weapon_types[i]+'/'+weapon_actions[j]);	// папка с звуками оружия
+bullet_types = new Array('bullets','shells','bombs','energys'); bullet_actions = new Array('hit','get');
+for (var i=0; i<bullet_types.length; i++)for (var j=0; j<bullet_actions.length; j++) libr.push("bullets/"+bullet_types[i]+'/'+bullet_actions[j]);	// папка с звуками пуль
+ground_types = new Array('dir','met'); ground_nums = new Array(15, 4);
+for (var i=0; i<ground_types.length; i++)for (var j=1; j<=ground_nums[i]; j++)libr.push("player/footsteps/"+ground_types[i]+''+j);					// папка с звуками шагов
+ammo_get_sound = new Array('bullets/get','shells/get','energys/get','bombs/get');
+libr.push('bullets/ammo_pack'); libr.push('bullets/no_ammo'); for (var i=0; i<3; i++)libr.push('bullets/health'+i);
+
+await_sounds = libr.length; get_sounds = 0;
+sounds = new Array(); var boop:Sound = new Sound(); boop.attachSound("boop");													// создаем массив звуков, в который запишем все наэкспорченное гавно
+for (var i=0; i<libr.length; i++)sounds.push(new Sound());																		// заполняем его пустыми новыми звуками
+for (var i=0; i<libr.length; i++){																								// ставим каждый на загрузку соответствующего адреса
+	sounds[i].loadSound(Folder+"/"+libr[i]+".mp3",false); sounds[i].name = libr[i];												// задаем каждому имя, по которому потом будем их разглядывать
+	sounds[i].onLoad = function(success:Boolean):Void { if (success){ get_sounds++;}}		 		// при зугрузке трассируем сообщение об успехе, иначе о неудаче
+}
+all_sounds_loaded = false;																										//обновляем загрузчик и ждем конца
+
+function sound_start(nam:String){
+	for (var i=0; i<sounds.length; i++)
+		if (sounds[i].name.indexOf(nam)>=0){ sounds[i].start(0,1); return; }			//воспроизвести звук совпадающий по имени
+	console_trace("# No sound '"+nam+"' in library!"); boop.start(0,1);					//если звука нет, бупнем и сообщим об ошибкe
+}
+function character_sound_start (who:MovieClip, nam:String){
+	if (who.sound_profile != undefined)sound_start (who.sound_profile+''+nam);
+}
+stop();
