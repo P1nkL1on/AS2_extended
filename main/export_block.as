@@ -20,7 +20,8 @@
 		// jumpBack - в случае, если коллизия с зелмей все таки возможна, то устанавливается коэффицент отпрыгивания - он положителен и меньше 1. Пропорционально ему скорость по у меняется при ударе.
 			function export_object (where, path:String, time:Number, x0, y0, sp_x0, sp_y0, acs, tormoz, mass , ignore_ground ,  jumpBack ){
 				//default values
-					if (where == undefined){ _root.console_trace('# No place '+where+' for '+path); return; } if (path == undefined){ _root.console_trace('# No path: '+path); return; }// Проверка места и пути, вывод ошибок
+					if (where == 'default') where = _root.item_layer;
+					if (where == undefined){ _root.console_trace('# No place '+where+' for '+path); where = _root;} if (path == undefined){ _root.console_trace('# No path: '+path); return; }// Проверка места и пути, вывод ошибок
 					if (time == undefined) time = _root.FPS_stable * 10; 																												// по дефолту - 10 секунд
 					if (x0 == undefined || y0 == undefined){ _root.console_trace('# Place is incorrect '+path); x0 = 0; y0=0;}															// неподобающее место для старта
 					if (sp_x0 == undefined) sp_x0 = 0;  if (sp_y0 == undefined) sp_y0 = 0; if (acs == undefined) acs = 0;  if (tormoz == undefined) tormoz = 1.05;						// стандартные значния сорокстей, ускорения и тормоза

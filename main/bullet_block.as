@@ -18,7 +18,7 @@
 		// НАПОМИНАНИЕ: и скорость и кол-во спредов может быть задано самостоятельно, без какой-либо опоры или привязки к этим массивам.
 			var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet");
 			var bullet_speed_array = new Array(              7,      new Array(1,10));
-			var bullet_spread_array= new Array(              6,   		       	  1);
+			var bullet_spread_array= new Array(              6,   		       	  4);
 	// Собственно элементарная функция для получения средне-случайного значения м-ду двумя числами.
 			function rnd_spd ( min, max ){ return  min + random(Math.round(100*(max-min)))/100 ; }
 			
@@ -31,6 +31,8 @@
 		// spread - кол-во спредов при выстреле. Аналогично скорости может быть задан ключом 'default'
 		// spread_stats - массив допустимых кадров спредов. (см. подбробнее в мувиклипе самого спреда.)
 			function spawn_a_bullet( where:MovieClip, bullet_path:String, x0, y0, spd, ang, spread, spread_stats){
+				// where check
+						if (where == undefined)where = _root;
 				//FPS предохранитель - если количество кадров очень низкое пули не производятся. Служит для предотвращения цикличности спавна низких частот.
 						if (_root.menu.fps.fps < 10)return;
 				//calculate default speed
@@ -52,7 +54,7 @@
 						b.onUnload = function (){ _root.total_bullets--; }
 				// spawn spread
 				// Также заставить появится спреды. spread_stat - случайный из предложенных состояний спреда. (влияет на его кадр). Появляется в том-же месте с теми же начальными координатами.
-					for (var i= 0; i<spread; i++){var spread_stat = spread_stats[random(spread_stats.length)];  spawn_a_spread (_root.hero_bullets, x0, y0, ang, spd, spread_stat, .001*(random(6)+5)+1);}
+					for (var i= 0; i<spread; i++){var spread_stat = spread_stats[random(spread_stats.length)];  spawn_a_spread (where, x0, y0, ang, spd, spread_stat, .001*(random(6)+5)+1);}
 				// На корне появляется сссылка на последнюю созданную пулю. На случай, если надо будет ещё что-то подправить вручную.
 					_root.last_bullet = b;
 			}

@@ -29,7 +29,7 @@
 			if (typ >= 1 && typ <= 4){ /*это патроны*/ if (size == 2) what_to_export = "pickup_large_ammo"; if (size == 1) for (var n=0;n<3; n++)spawn_pickup (x0, y0, typ, 0, fadetime); if (size == 0) what_to_export = "pickup_ammo";  }
 			if (typ == -1){ /*здоровье*/ what_to_export = 'pickup_healing';}
 			
-			_root.export_object (_root, what_to_export, fadetime, x0 , y0, (random(200/100)-.5)*3,-random(300)/100-2, .2,1.8,1, false,.3);
+			_root.export_object (_root.item_layer, what_to_export, fadetime, x0 , y0, (random(200/100)-.5)*3,-random(300)/100-2, .2,1.8,1, false,.3);
 			_root.last_exported.isPickUp = true; _root.last_exported.pickUpType = typ; _root.last_exported.siz = size;
 		}
 }
