@@ -43,6 +43,7 @@
 		// Правктически полностью аналогично предыдущей функции.
 		// В path - не надо дописывать _effect. Кстати, все пути эффектов должны заканчиваться на _effect.			
 			function export_effect (where, path:String, x0, y0, angle){
+				if (where == 'default') where = _root.effect_layer;
 				ef_sc ++;  _root.total_effects++; where.attachMovie(path+"_effect", "ef_sc_"+ef_sc, where.getNextHighestDepth()); var e = where["ef_sc_"+ef_sc];
 				e._x = x0; e._y= y0; e._rotation =( angle )/Math.PI*180; e.onUnload = function (){ _root.total_effects --; }
 				_root.lastEffect = e;

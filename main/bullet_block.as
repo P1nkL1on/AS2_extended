@@ -16,9 +16,9 @@
 		// Если вместо одного числа исопльзуется массив, то это означает, что скорость должна быть случайной м-ду двумя этими параметрами.
 		// Третий массив отвечает за дефолтное количество спредов при спавне пули. 
 		// НАПОМИНАНИЕ: и скорость и кол-во спредов может быть задано самостоятельно, без какой-либо опоры или привязки к этим массивам.
-			var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet");
-			var bullet_speed_array = new Array(              7,      new Array(1,10));
-			var bullet_spread_array= new Array(              6,   		       	  4);
+			var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet","rocket_bullet");
+			var bullet_speed_array = new Array(              7,      new Array(1,10),             2);
+			var bullet_spread_array= new Array(              6,   		       	  4,             10);
 	// Собственно элементарная функция для получения средне-случайного значения м-ду двумя числами.
 			function rnd_spd ( min, max ){ return  min + random(Math.round(100*(max-min)))/100 ; }
 			
@@ -30,9 +30,10 @@
 		// spd - может быть задан числом, массивом 2х чисел (для случайной скорости), ключом 'default' - для автоматических подстановок значений
 		// spread - кол-во спредов при выстреле. Аналогично скорости может быть задан ключом 'default'
 		// spread_stats - массив допустимых кадров спредов. (см. подбробнее в мувиклипе самого спреда.)
-			function spawn_a_bullet( where:MovieClip, bullet_path:String, x0, y0, spd, ang, spread, spread_stats){
-				// where check
-						if (where == undefined)where = _root;
+		// host - тот, кто выпустил эту самую пулю
+			function spawn_a_bullet( where:MovieClip, bullet_path:String, x0, y0, spd, ang, spread, spread_stats, host){
+				// where check, host check
+						if (where == undefined)where = _root; if (host == undefined) host = null;
 				//FPS предохранитель - если количество кадров очень низкое пули не производятся. Служит для предотвращения цикличности спавна низких частот.
 						if (_root.menu.fps.fps < 10)return;
 				//calculate default speed
@@ -49,7 +50,7 @@
 				// b.damage_done отвечает за то, был ли нанесен пулей урон. Как правило после первого попадания пуля теряет свои боевые свойства.
 						hero_bul++; _root.total_bullets ++; 
 						where.attachMovie(bullet_path,"hero_bul_"+hero_bul, where.getNextHighestDepth()); var b = where["hero_bul_"+hero_bul];
-						b._x = x0; b._y = y0; b.spd = spd; b.ang = ang; b.damage = 1; b.damage_done = false;
+						b._x = x0; b._y = y0; b.spd = spd; b.ang = ang; b.damage = 1; b.damage_done = false; b.host = host;
 					// При выгрузке уменьшает общее количество пуль. Исключиетнль остатистический элемент.
 						b.onUnload = function (){ _root.total_bullets--; }
 				// spawn spread
@@ -65,7 +66,7 @@
 			function spawn_a_spread (where:MovieClip,  x0, y0, ang, spd_bul, stat, degrad){// return;
 				// Все действия ф-ции аналогичны действияем в предыдущей ф-ции.
 				sprd++; _root.total_spreads ++;
-						where.attachMovie("bullet_fly_out", "bl_sprd"+sprd, where.getNextHighestDepth()); var s = where["bl_sprd"+sprd]; 
+						where.attachMovie("bullet_fly_out", "bl_sprd"+sprd, where.getNextHighestDepth()); var s = where["bl_sprd"+sprd];
 					// Таймер почему-то ни на что не влияет. (!Разобраться)
 						s._x = x0; s._y = y0; s.ang = ang; s.stat = stat; s.timer = undefined; s.spd = Math.max(1,Math.min(3,spd_bul/3))*(random(80)/100+.3)*(1+.2*random(6)*(random(50)==0));
 						s.degrade_speed = degrad; s.onUnload = function (){ _root.total_spreads--; }
@@ -90,9 +91,12 @@
 						if (((target.team != 1 && bullet._parent == _root.hero_bullets) || (target.team != 2 && bullet._parent == _root.enemy_bullets))			// Если пуля и цель не являются союзниками
 							&& target.hitTest(bullet._x, bullet._y, true)) for (var i=0; i<target.hitboxes.length; i++)if ( bullet.hitTest(target.hitboxes[i]) )// И если цель касается центра масс пули, а пуля касается одного из его хибоксов
 						// Пуля отправляется в анимацию смерти, урон нанесен, хитбокс, в который попали делаем красным (трассировка), снимаем здоровье цели, увеличиваем её скорости по х. Возвращаем попадание.
-							{ bullet.gotoAndStop('dead'); bullet.damage_done = true; target.hitboxes[i].colors.hurted._alpha = 100; target.hp-= bullet.damage; target.sp_x0 += .1*bullet.spd*Math.cos(bullet.ang); return true; }			//collision action
+							{ bullet.gotoAndStop('dead');for (var f=0; f<bullet.frame_offset; f++)bullet.nextFrame(); bullet.damage_done = true; target.hitboxes[i].colors.hurted._alpha = 100; target.hp-= bullet.damage; target.sp_x0 += .1*bullet.spd*Math.cos(bullet.ang);	 target.sp_y += .1*bullet.spd*Math.sin(bullet.ang);// collision action
+							if (target.hpmax>0){var trc = '~ '+getname(bullet.host)+' deals '+bullet.damage+' dmg. to '+getname(target)+' '; if (target.hp<=0 && !target.dead) trc ='~ '+getname(target)+' killed by '+getname(bullet.host)+' ';_root.console_trace(trc);} return true; }																		// trace
 				} return false; }	// Ни с чем пока не соприкасется.
-			
+			function getname (who:MovieClip):String{
+				if (who == null) return 'unknown'; else return (who+"").substr((who+"").lastIndexOf(".")+1,(who+"").length - (who+"").lastIndexOf("."));
+			}
 	//WARNING - NOW WORKING ONLY FILTERING UNITS WHO A AMMO HOLDERS
 		// Работает в данных условиях только для проверки столкновения с наследниками интерфейса hitable + ammo_holder
 		// Возвращает подходящий условиям мувиклип, который соприкассается с заданным объектом.
@@ -101,6 +105,21 @@
 				for (var tt = 0; tt<_root.all_hitable.length; tt++){ var target = _root.all_hitable[tt];
 					if (target.hitTest(thing) && target.ammo_holder)for (var i=0; i<target.hitboxes.length; i++)if ( thing.hitTest(target.hitboxes[i]) ){ return target; }
 				} return null;
+			}
+	// Круговой выстрел - коллизия со взрывом и тд
+			function circle_damage (x0, y0, Rad, damage_max, damage_min){
+				if (damage_max == undefined)damage_max = 2; if (damage_min == undefined)damage_min = 1;
+				if (Rad == undefined) Rad = 50;
+				for (var tt = 0; tt<_root.all_hitable.length; tt++){ 
+					var target = _root.all_hitable[tt];		// цель
+					var dist = Math.sqrt( Math.pow( x0 - target._x,2 ) + Math.pow( y0 - target._y + target._height/2,2 ) );	// расстояние до центра цели
+					
+					if (dist < Rad){var damage = damage_min + Math.round(dist/Rad*(damage_max - damage_min)); 
+						if (target.hpmax>0){ 
+						target.hp -= damage;   if (damage>0)for (var i=0; i<target.hitboxes.length; i++)target.hitboxes[i].colors.hurted._alpha = 100;	// красный цвет хитбоксов
+						var ang = Math.atan2(y0 - target._y + target._height/2, x0 - target._x); target.sp_x0 -= (2+.1*damage)*Math.cos(ang); target.sp_y -= (2+.1*damage)*Math.sin(ang);	// отталкивать
+						_root.console_trace("~ "+getname(target)+' receive '+damage+' dmg. from explosion');}}		//calculating damage
+				}
 			}
 	
 }

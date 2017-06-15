@@ -118,7 +118,7 @@
 										for (var shot=0; shot<gun.bullet_per_shot; shot++){																																		// для каждой пули спавнить ее и увеличивать отдачу
 												gun.ot_dist += gun.otdat; 
 												gun.host.sp_x0 += - 0.02*gun.otdat * Math.cos(gun._rotation / 180 * Math.PI);
-												_root.spawn_a_bullet (where, gun.bullet_type, dulo_x, dulo_y, gun.bullet_speed, gun._rotation/180*Math.PI + random(Math.round(gun.bullet_spread*1000))/1000 - gun.bullet_spread/2, 'default', gun.spread_stats);}}// bullet_spawn
+												_root.spawn_a_bullet (where, gun.bullet_type, dulo_x, dulo_y, gun.bullet_speed, gun._rotation/180*Math.PI + random(Math.round(gun.bullet_spread*1000))/1000 - gun.bullet_spread/2, 'default', gun.spread_stats, gun.host);}}// bullet_spawn
 								}
 							}					
 			}
