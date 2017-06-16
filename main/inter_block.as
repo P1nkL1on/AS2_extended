@@ -17,6 +17,7 @@
 		// Каждый апдейт пододвигает тело в сооттветствующую точку для ног.
 		// Исользуется только в связке с set_body();
 			function being_body(body:MovieClip){
+				body._x = body.legs._x - 9*(body._parent.runningWall)*(.5 + .5*(body._parent.sp_y >= 0));
 				body._y = body.legs._y + body.legs.taz._y;  body._rotation = body.legs.taz._rotation * (body.legs.taz._xscale / Math.abs(body.legs.taz._xscale));	// подгон по координатам
 				body._xscale = body._parent.sp_x / Math.abs(body._parent.sp_x ) * body.xs;																			// _xscale определяется знаком горизонтальной скорости родителя
 				if (!isNaN(body._parent.sp_x / Math.abs(body._parent.sp_x )))body._parent.wasScale = body._parent.sp_x / Math.abs(body._parent.sp_x );				// если скорость родителя 0, хитрое реешение, исользуется то, что было раньше
@@ -40,6 +41,8 @@
 			// является управляемым - для определения этого интерфейса
 			// wantReload, wantDrop - бул-переменные для отслеживания желаний игрока со стороны пушек
 				who.controlable = true; who.wantReload = false; who.wantDrop = false; 
+			// бежит ли чар по стене
+				who.runningWall = 0;
 			}
 		// moveble character
 		// интерфейс перемещаемого объекта. объект может перемещаться под действием сил гравитации.
@@ -55,7 +58,7 @@
 			function being_moveble (who:MovieClip, ignore_ground:Boolean){
 				if (ignore_ground == undefined) ignore_ground = false;	// default values
 					for (var tick = 0; tick<_root.updates; tick++){		// каждый требуемый апдейт
-						if (who.ground){ who.ground = defineGround(who); if (Math.abs(who.sp_x0) > 0.1) who.sp_x0 /= Math.pow(who.tormoz,.25); else who.sp_x0 = 0; }	// замедление горизонтальной скорости на земле
+						if (who.ground){ who.ground = defineGround(who); if (Math.abs(who.sp_x0) > 0.1) who.sp_x0 /= who.tormoz; else who.sp_x0 = 0; }	// замедление горизонтальной скорости на земле
 						if (!who.ground){ who.sp_y += _root.G*who.mass; if (!ignore_ground){if (defineGround(who)){if (who.jumpBack == 0){ who.ground = true; who.sp_y = 0; if (who.sp_y0>0) who.sp_y0 = 0; }
 																			// при сильном отскоке проигрывать звук удара о землю, если коэффицент jumpBack != 0, то притормаживать по Х и отражать по У. В противном случае приземлить об-т, сбросить все его скорости по У, замедлять по Х
 																			/*otskok ili finish*/ else{ if (Math.abs(who.sp_y)>=1){ if (Math.abs(who.sp_y)>=4)_root.footstep_sound(); who.sp_y0 = -who.jumpBack*who.sp_y; who.sp_x0 /= who.tormoz; who.sp_y = 0;} else {who.ground = true; who.sp_y = 0; who.sp_y0 = 0;}}}}}
@@ -79,6 +82,20 @@
 				// если ни один из блоков не оказывается рядом, то вернуть false - объект в настоящий момент куда-то летит (падает)
 					return false;
 			}
+			function checkWallRun (who:MovieClip):Number{
+				for (var i=0; i<_root.wall_blocks.length; i++){ 
+				{ var wall = _root.wall_blocks[i]; var wall_dist = 25;
+					if (wall.can_run == true && (!who.ground) && who.hitTest(wall.nad)
+						 && wall.gr.hitTest( who._x - wall_dist*wall.direct + who.sp_x, who._y, true ) && ( who.sp_x + who.sp_x0 )*wall.direct <= 0
+						 && ((wall.direct <= 0 && who._x < wall._x  && who.keypresses[1] > 0)
+						 || ( wall.direct >= 0 && who._x > wall._x  && who.keypresses[0] > 0)))
+					
+							{ who.sp_y = Math.min(who.sp_y - _root.G * .4, .2); who._x = wall._x+wall_dist*wall.direct; // пристроиться к стене и замедлить торможение по У
+							  if (wall.direct == undefined) wall.direct = 0;											// вдруг директа нет - сторона, вкоторую направлена стена
+							  who.sp_x = -.1*wall.direct; who.sp_x0 = 0;												// изменение скорости по Х (.1 а не 0, чтобы не было бага проскальзывания)
+							  return wall.direct; } }}																	// в случае, когда ты уже на стене, возвращает направление возможного отпрыга
+				return 0;																								// ничего не нашел
+			}
 			
 		// on every frame (non update depending)
 		// исользуется в связке с set_controlable
@@ -97,12 +114,16 @@
 						// descresing speed when nothing is presseds
 							if (who.ground && !((who.keypresses[0]>0 && who.sp_x<0) || (who.keypresses[1]>0 && who.sp_x>0)))if (Math.abs(who.sp_x)>.1)who.sp_x /= who.tormoz; else who.sp_x = 0;
 						// watching a jumping
+						// wall running
+							who.runningWall = checkWallRun (who); 
 						// добавление звука прыжка от персонажа
-							if (who.keypresses[2] == 1 && who.ground){ who.sp_y = -who.jump_heigth; who._y -= 5; who.ground = false; _root.character_sound_start(who,'jump');}
+							if (who.keypresses[2] == 1 && ( who.ground || who.runningWall!=0))
+								{ 	who.sp_x0 += who.runningWall*(3); who._x += who.runningWall*(2);// смещение по x при отпрыге от стены
+									who.sp_y = -who.jump_heigth * (1-.2*(who.runningWall!=0)); who._y -= 5; who.ground = false; _root.character_sound_start(who,'jump');}
 						// not working if is dead
 						// массив автоматически сбрасывается в 0, если персонаж умирает. dead - св-во интерфейса set_health
 							if (who.dead)who.keypresses = 0;
-				}
+						}
 			}
 		
 		
