@@ -95,7 +95,7 @@
 							if (target.hpmax>0){var trc = '~ '+getname(bullet.host)+' deals '+bullet.damage+' dmg. to '+getname(target)+' '; if (target.hp<=0 && !target.dead) trc ='~ '+getname(target)+' killed by '+getname(bullet.host)+' ';_root.console_trace(trc);} return true; }																		// trace
 				} return false; }	// Ни с чем пока не соприкасется.
 			function getname (who:MovieClip):String{
-				if (who == null) return 'unknown'; else return (who+"").substr((who+"").lastIndexOf(".")+1,(who+"").length - (who+"").lastIndexOf("."));
+				if (who == null) return 'unknown'; else return who._name;//return (who+"").substr((who+"").lastIndexOf(".")+1,(who+"").length - (who+"").lastIndexOf("."));
 			}
 	//WARNING - NOW WORKING ONLY FILTERING UNITS WHO A AMMO HOLDERS
 		// Работает в данных условиях только для проверки столкновения с наследниками интерфейса hitable + ammo_holder

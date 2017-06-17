@@ -85,14 +85,14 @@
 			function checkWallRun (who:MovieClip):Number{
 				for (var i=0; i<_root.wall_blocks.length; i++){ 
 				{ var wall = _root.wall_blocks[i]; var wall_dist = 25;
-					if (wall.can_run == true && (!who.ground) && who.hitTest(wall.nad)
+					if ((++_root.defined || true) && wall.can_run == true && (!who.ground) && who.hitTest(wall.nad)
 						 && wall.gr.hitTest( who._x - wall_dist*wall.direct + who.sp_x, who._y, true ) && ( who.sp_x + who.sp_x0 )*wall.direct <= 0
 						 && ((wall.direct <= 0 && who._x < wall._x  && who.keypresses[1] > 0)
 						 || ( wall.direct >= 0 && who._x > wall._x  && who.keypresses[0] > 0)))
 					
 							{ who.sp_y = Math.min(who.sp_y - _root.G * .4, .2); who._x = wall._x+wall_dist*wall.direct; // пристроиться к стене и замедлить торможение по У
 							  if (wall.direct == undefined) wall.direct = 0;											// вдруг директа нет - сторона, вкоторую направлена стена
-							  who.sp_x = -.1*wall.direct; who.sp_x0 = 0;												// изменение скорости по Х (.1 а не 0, чтобы не было бага проскальзывания)
+							  who.sp_x = -.1*wall.direct; who.sp_x0 = -.1*wall.direct;												// изменение скорости по Х (.1 а не 0, чтобы не было бага проскальзывания)
 							  return wall.direct; } }}																	// в случае, когда ты уже на стене, возвращает направление возможного отпрыга
 				return 0;																								// ничего не нашел
 			}
