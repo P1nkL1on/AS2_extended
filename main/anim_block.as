@@ -38,6 +38,11 @@
 			if (who.stat == undefined) {_root.console_trace("# ("+who + ") can not be auto-animated. Cause it do not have 'stat'"); return;} 	//have no state
 			if (who.anim == undefined) {_root.console_trace("# ("+who + ") can not be auto-animated. Cause it do not have 'anim'"); return;}	//have no anim
 			who.anim++; if (who.anim_spd == undefined) who.anim_spd = 2;	//if have no speed
-			_root.animate(who,_root.getByName(who,who.stat+"_start"),_root.getByName(who,who.stat+"_stop"),who.anim_spd);//animating
+			var str = _root.getByName(who,who.stat+"_start");
+			var stp = _root.getByName(who,who.stat+"_stop");
+			if (who.direct == undefined || who.anim_fix == undefined ||
+			( who.anim_fix && ((who.direct > 0 && who._currentframe != stp)||(who.direct < 0 && who._currentframe != str)) ))
+				{if (who.direct == undefined)_root.animate(who, str, stp,who.anim_spd);//animating
+										else _root.animate(who, str, stp,who.anim_spd, who.direct);}
 		}
 }

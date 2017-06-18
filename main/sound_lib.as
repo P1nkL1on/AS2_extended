@@ -18,7 +18,7 @@
 					for (var i=0; i<bullet_types.length; i++)for (var j=0; j<bullet_actions.length; j++) libr.push("bullets/"+bullet_types[i]+'/'+bullet_actions[j]);	// папка с звуками пуль
 					for (var i=0; i<ground_types.length; i++)for (var j=1; j<=ground_nums[i]; j++)libr.push("player/footsteps/"+ground_types[i]+''+j);					// папка с звуками шагов
 					libr.push('bullets/ammo_pack'); libr.push('bullets/no_ammo'); for (var i=0; i<3; i++)libr.push('bullets/health'+i);
-					libr.push('bullets/bombs/hit_medium'); libr.push('bullets/bombs/hit_large');
+					libr.push('bullets/bombs/hit_medium'); libr.push('bullets/bombs/hit_large'); libr.push("player/alert");
 					
 					var await_sounds:Number = libr.length; 																												// создаем массив звуков, в который запишем все наэкспорченное гавно
 					for (var i=0; i<libr.length; i++)sounds.push(new Sound());																		// заполняем его пустыми новыми звуками

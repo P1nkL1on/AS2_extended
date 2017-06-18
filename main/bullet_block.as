@@ -92,7 +92,7 @@
 							&& target.hitTest(bullet._x, bullet._y, true)) for (var i=0; i<target.hitboxes.length; i++)if ( bullet.hitTest(target.hitboxes[i]) )// И если цель касается центра масс пули, а пуля касается одного из его хибоксов
 						// Пуля отправляется в анимацию смерти, урон нанесен, хитбокс, в который попали делаем красным (трассировка), снимаем здоровье цели, увеличиваем её скорости по х. Возвращаем попадание.
 							{ bullet.gotoAndStop('dead');for (var f=0; f<bullet.frame_offset; f++)bullet.nextFrame(); bullet.damage_done = true; target.hitboxes[i].colors.hurted._alpha = 100; target.hp-= bullet.damage; target.sp_x0 += .1*bullet.spd*Math.cos(bullet.ang);	 target.sp_y += .1*bullet.spd*Math.sin(bullet.ang);// collision action
-							if (target.hpmax>0){var trc = '~ '+getname(bullet.host)+' deals '+bullet.damage+' dmg. to '+getname(target)+' '; if (target.hp<=0 && !target.dead) trc ='~ '+getname(target)+' killed by '+getname(bullet.host)+' ';_root.console_trace(trc);} return true; }																		// trace
+							if (target.hpmax>0){target.hitBy = bullet.host; var trc = '~ '+getname(bullet.host)+' deals '+bullet.damage+' dmg. to '+getname(target)+' '; if (target.hp<=0 && !target.dead) trc ='~ '+getname(target)+' killed by '+getname(bullet.host)+' ';_root.console_trace(trc);} return true; }																		// trace
 				} return false; }	// Ни с чем пока не соприкасется.
 			function getname (who:MovieClip):String{
 				if (who == null) return 'unknown'; else return who._name;//return (who+"").substr((who+"").lastIndexOf(".")+1,(who+"").length - (who+"").lastIndexOf("."));
