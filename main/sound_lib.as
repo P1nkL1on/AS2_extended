@@ -7,11 +7,11 @@
 		// libr - массив с названиями (путями) до файлов из текущего места без учета окончания ,mp3
 			var libr:Array = new Array(); var boop:Sound;  			
 			var player_models:Array = new Array('mouse','hamster','robot','jent');							var player_sounds:Array = new Array('jump','hited','dead');
-			var weapon_types:Array = new Array('pistol','shotgun','sawed_off'); 							var weapon_actions:Array = new Array('fire','reload','equip');
+			var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket'); 					var weapon_actions:Array = new Array('fire','reload','equip');
 			var bullet_types:Array = new Array('bullets','shells','bombs','energys'); 						var bullet_actions:Array = new Array('hit','get');
 			var ground_types:Array = new Array('common','met','water','bullets','shells','glass','robot'); 												
 			var ground_nums:Array = new Array(       15,    4,      4,        6,       5,	   4,      2);
-			var also:Array = new Array('items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad');
+			var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad');
 			
 			var sounds:Array = new Array();																											//all the sounds
 			var all_sounds_loaded:Boolean = false;																									//обновляем загрузчик и ждем конца
@@ -45,16 +45,13 @@
 		var sp_ID = 0;	// индекс папки, в которой хранится нужный звук
 		// var ground_types:Array = new Array('common','met','bullets','robot','water'); 	
 			// { spec - 0\undefined - nothing special, 1 - quiet step, 2 - wall step, 3 - in water step }
-			public function footstep_sound (who:MovieClip, spec:String){
+			public function footstep_sound (who:MovieClip){
 				sp_ID = 0;
 				if (who.sound_profile!=undefined)
 					for(var i=0; i<ground_types.length; i++)if (ground_types[i] == who.sound_profile){ sp_ID = i; break; }
-				/*switch(spec){
-					case 1:break;
-					case 2:break;
-					case 3:break;
-					default: break;
-				}*/
+			// special cases
+				if (who.last_ground.is_water)sp_ID = 2;
+				if (who.last_ground.is_wall)sp_ID = 1;
 				sound_start ("npc/footsteps/"+ground_types[sp_ID]+"/stp"+(random(ground_nums[sp_ID])+1));
 			}
 

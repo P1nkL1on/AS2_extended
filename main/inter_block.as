@@ -48,6 +48,7 @@
 		// интерфейс перемещаемого объекта. объект может перемещаться под действием сил гравитации.
 		// задаётся объект, задаются его ускорение, торможение (коэффицент около 1.005), отскок от поверхности (положительное число менее единицы), mass (коэффицент действия силы тяжести на об-т)
 			function set_moveble (who:MovieClip, acseleration:Number, desacseleration_k:Number, jumpBack:Number,  mass:Number){
+				who.last_ground = null; 	// мувиклип последней земли, с которой взаимодействовал об-т
 				who.sp_x = 0; who.sp_x0 = 0; who.sp_y0 = 0; who.acs = acseleration;  who.tormoz = desacseleration_k;		// назначение переменных
 				who.sp_y = 0; who.ground = false; 																			// граунд - переменная бул, отвечающая за то, стоит ли сейчас на земле данный об-т
 				if (mass == undefined) who.mass = 1; else who.mass = mass; if (jumpBack == undefined) who.jumpBack = 0; else who.jumpBack = jumpBack;	// дефолтное назначение второстепенных переменных
@@ -78,7 +79,9 @@
 					for (var i=0; i<_root.ground_blocks.length; i++){
 						if ((++_root.defined || true) and who.sp_y + who.sp_y0 >= 0 && who.hitTest(_root.ground_blocks[i].nad) &&
 						(_root.ground_blocks[i].gr.hitTest(who._x, who._y + 1 + who.sp_y + who.sp_y0, true) || _root.ground_blocks[i].gr.hitTest(who._x, who._y + 1, true)))
-							{ who._y = _root.ground_blocks[i]._y; return true; } }
+							{ who._y = _root.ground_blocks[i]._y; who.last_ground = _root.ground_blocks[i]; 
+									water_check (who);// water special
+								return true; } }
 				// нижний порог У координаты. Что-то вроде нижнего пола, ниже него опуститься нельзя.
 					if (who._y + who.sp_y + who.sp_y0 >= _root.StageHeight-40){ who._y = _root.StageHeight-40; return true; }
 				// если ни один из блоков не оказывается рядом, то вернуть false - объект в настоящий момент куда-то летит (падает)
@@ -109,7 +112,7 @@
 							  if (wall.direct == undefined) wall.direct = 0;											// вдруг директа нет - сторона, вкоторую направлена стена
 							  who.sp_x = -.1*wall.direct; who.sp_x0 = -.1*wall.direct;									// изменение скорости по Х (.1 а не 0, чтобы не было бага проскальзывания)
 							  if (who.keypresses[0]*(wall.direct>0)+who.keypresses[1]*(wall.direct<0)+who.keypresses[2]!=0)wall.timer = 60;				// таймер прилипания
-							  return wall.direct; } }}																	// в случае, когда ты уже на стене, возвращает направление возможного отпрыга
+							  who.last_ground = wall; return wall.direct; } }}																	// в случае, когда ты уже на стене, возвращает направление возможного отпрыга
 				return 0;																								// ничего не нашел
 			}
 			
@@ -175,4 +178,18 @@
 						if (who.hp <= who.hpwas-1){who.hited++; _root.character_sound_start(who,'hited');} who.hpwas = who.hp;
 				}
 			}
+		var blin_check = 0;
+		function water_check (who){
+			if (who.last_ground.is_water && (!who.ground || (who.ground && Math.abs(who.sp_x + who.sp_x0)>0 && who.step)))
+								  { _root.export_effect('default','water_splash',who._x, who._y, 0); who.step = false;
+									_root.lastEffect._alpha = 80;
+									_root.lastEffect.gotoAndStop(detect_water(who, _root.lastEffect));}// define pluh
+		}
+		function detect_water (who:MovieClip, water:MovieClip):String{
+			if (who._width >= 35){
+				if (who.sp_y > 7)return "large";
+				if (who.sp_y > 2)return "medium";}
+			if (who._width < 4 || (who.sp_y <= .5 && who.sp_y!=0))water.removeMovieClip();
+			return "small";
+		}
 }
