@@ -61,7 +61,9 @@
 						if (who.ground){ who.ground = defineGround(who); if (Math.abs(who.sp_x0) > 0.1) who.sp_x0 /= who.tormoz; else who.sp_x0 = 0; }	// замедление горизонтальной скорости на земле
 						if (!who.ground){ who.sp_y += _root.G*who.mass; if (!ignore_ground){if (defineGround(who)){if (who.jumpBack == 0){ who.ground = true; who.sp_y = 0; if (who.sp_y0>0) who.sp_y0 = 0; }
 																			// при сильном отскоке проигрывать звук удара о землю, если коэффицент jumpBack != 0, то притормаживать по Х и отражать по У. В противном случае приземлить об-т, сбросить все его скорости по У, замедлять по Х
-																			/*otskok ili finish*/ else{ if (Math.abs(who.sp_y)>=1){ if (Math.abs(who.sp_y)>=4)_root.footstep_sound(); who.sp_y0 = -who.jumpBack*who.sp_y; who.sp_x0 /= who.tormoz; who.sp_y = 0;} else {who.ground = true; who.sp_y = 0; who.sp_y0 = 0;}}}}}
+																			/*otskok ili finish*/ else{ if (Math.abs(who.sp_y)>=1){ if (Math.abs(who.sp_y)>=4)_root.footstep_sound(who); who.sp_y0 = -who.jumpBack*who.sp_y; who.sp_x0 /= who.tormoz; who.sp_y = 0;} else {who.ground = true; who.sp_y = 0; who.sp_y0 = 0;}}}}}
+					// walls
+						checkWallCollision (who);
 					// movement applyes
 						who._x += who.sp_x + who.sp_x0;
 						who._y += who.sp_y + who.sp_y0; 
@@ -78,21 +80,35 @@
 						(_root.ground_blocks[i].gr.hitTest(who._x, who._y + 1 + who.sp_y + who.sp_y0, true) || _root.ground_blocks[i].gr.hitTest(who._x, who._y + 1, true)))
 							{ who._y = _root.ground_blocks[i]._y; return true; } }
 				// нижний порог У координаты. Что-то вроде нижнего пола, ниже него опуститься нельзя.
-					if (who._y + who.sp_y + who.sp_y0 >= 360){ who._y = 360; return true; }
+					if (who._y + who.sp_y + who.sp_y0 >= _root.StageHeight-40){ who._y = _root.StageHeight-40; return true; }
 				// если ни один из блоков не оказывается рядом, то вернуть false - объект в настоящий момент куда-то летит (падает)
 					return false;
 			}
+			
+			function checkWallCollision (who:MovieClip){
+				// если не движется по горизонтали, то не может ударится об сцену
+					if (who.sp_x + who.sp_x0 == 0) return false;
+				// test wall collision
+					for (var i=0; i<_root.wall_blocks.length;i++ )
+					{	wall = _root.wall_blocks[i];  
+						if (wall.can_block == true && (who.hitTest(wall.nad)) && (wall.gr.hitTest(who._x -who._width / 4 * wall.direct + who.sp_x + who.sp_x0, who._y - 10))
+								&& ((who.sp_x + who.sp_x0)*(wall.direct)<=0))
+							{  who._x = wall._x+who._width / 4 * wall.direct; who.sp_x *= wall_diflect; who.sp_x0 *= wall_diflect; }
+					}
+			} 
+			var wall = null; var wall_dist = 25; var wall_diflect = -.8;
 			function checkWallRun (who:MovieClip):Number{
 				for (var i=0; i<_root.wall_blocks.length; i++){ 
-				{ var wall = _root.wall_blocks[i]; var wall_dist = 25;
+				{ wall = _root.wall_blocks[i]; 
 					if ((++_root.defined || true) && wall.can_run == true && (!who.ground) && who.hitTest(wall.nad)
 						 && wall.gr.hitTest( who._x - wall_dist*wall.direct + who.sp_x, who._y, true ) && ( who.sp_x + who.sp_x0 )*wall.direct <= 0
-						 && ((wall.direct <= 0 && who._x < wall._x  && who.keypresses[1] > 0)
-						 || ( wall.direct >= 0 && who._x > wall._x  && who.keypresses[0] > 0)))
+						 && ((wall.direct <= 0 && who._x < wall._x  && (who.keypresses[1] > 0 ||( wall.can_block == true && --wall.timer>0)))
+						 || ( wall.direct >= 0 && who._x > wall._x  && (who.keypresses[0] > 0 || (wall.can_block == true && --wall.timer>0)))))
 					
-							{ who.sp_y = Math.min(who.sp_y - _root.G * .4, .2); who._x = wall._x+wall_dist*wall.direct; // пристроиться к стене и замедлить торможение по У
+							{ who.sp_y = Math.min(Math.max(who.sp_y - _root.G * .4,-15), .2); who._x = wall._x+wall_dist*wall.direct; // пристроиться к стене и замедлить торможение по У
 							  if (wall.direct == undefined) wall.direct = 0;											// вдруг директа нет - сторона, вкоторую направлена стена
-							  who.sp_x = -.1*wall.direct; who.sp_x0 = -.1*wall.direct;												// изменение скорости по Х (.1 а не 0, чтобы не было бага проскальзывания)
+							  who.sp_x = -.1*wall.direct; who.sp_x0 = -.1*wall.direct;									// изменение скорости по Х (.1 а не 0, чтобы не было бага проскальзывания)
+							  if (who.keypresses[0]*(wall.direct>0)+who.keypresses[1]*(wall.direct<0)+who.keypresses[2]!=0)wall.timer = 60;				// таймер прилипания
 							  return wall.direct; } }}																	// в случае, когда ты уже на стене, возвращает направление возможного отпрыга
 				return 0;																								// ничего не нашел
 			}

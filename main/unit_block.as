@@ -84,7 +84,7 @@
 								_root.attachMovie("view_field","vf_"+who, _root.getNextHighestDepth()); who.viewfield = _root["vf_"+who]; who.borned.push(who.viewfield);
 								_root.attachMovie("sound_mark","sm_"+who, _root.getNextHighestDepth()); who.hear = _root["sm_"+who];	  who.borned.push(who.hear);
 							// таймер жизни, частота скана
-								who.acs = .015;
+								who.acs = .015; who.sound_profile = 'robot';
 								who.warned = true; who.lifetime = -random(360); who.scanEvery = 30; who.warningTimer = 0;
 							// направление взгляда и цели
 								who.watch_angle = Math.PI*(random(200)/100); who.targ = null; who.targ_was = null; who.sped = 0;
@@ -153,13 +153,13 @@
 												if (isNaN(who.targ_x)){who.watch_angle -= Math.PI / 1600; who.scanEvery = 60; who.warned = true;}		// scan passivly first
 																else{ if (who.warning_time-->0){
 																		who.scanEvery = 20;
-																		who.targ_x += who.targ_sp_x; who.targ_sp_x /= 1.002; // approxxime movement
-																		who.targ_y = Math.min(who.targ_y + who.targ_sp_y, 340); who.targ_sp_y += _root.G/2;
+																		who.targ_x += who.targ_sp_x; who.targ_sp_x /= 1.02; // approxxime movement
+																		who.targ_y = Math.min(who.targ_y + who.targ_sp_y, _root.StageHeight-60); who.targ_sp_y += _root.G/2;
 																		watchTo(who, .5*(who.targ_x+who.targ_x0), .5*(who.targ_y+who.targ_y0));}		// follow last hear time
 																	  	
 																	  else{ who.targ_x = Number.NaN; who.targ_y = Number.NaN; }}}	
 										else{ who.scanEvery = 4; if (who.targ!=null){watchTo(who, who.targ); 
-											if (who.warning_time <= 0){_root.sound_start("player/alert"); /*fun*/who.sp_y -= 4;}// SPOTTED
+											if (who.warning_time <= 0){_root.sound_start("npc/other/alert"); /*fun*/who.sp_y -= 4;}// SPOTTED
 											who.warning_time = WarningTime;
 											if (random(10)==0 && who.warned){who.warned =  !( inform_other(who)); }// inform all other
 										// remember target movement

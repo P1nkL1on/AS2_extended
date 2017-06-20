@@ -99,7 +99,7 @@
 						if (Key.isDown(1))gun.watch1++; else gun.watch1 = 0;		//when mouse is clicked || R is pressed
 							gun.reload_timer -= (gun.reload_timer>0)*1;
 						//no ammo case
-							if (gun.reload_timer == 0 && gun.watch1 == 1 && !(gun.current_ammo >= gun.ammo_per_shot && gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))_root.sound_start('bullets/no_ammo');
+							if (gun.reload_timer == 0 && gun.watch1 == 1 && !(gun.current_ammo >= gun.ammo_per_shot && gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))_root.sound_start('items/no_ammo');
 						//reload
 							if (gun.reload_timer<=0 && ((gun.current_ammo > 0 && gun.watch1 != 1 && gun.host.wantReload) || (gun.current_ammo == 0 && gun.watch1 + gun.host.wantReload*1==1)))
 								{ gun.reload_timer += gun.reloadFull; gun.ost = gun.current_ammo; gun.current_ammo = gun.ammo; gun.gotoAndStop('hand_reload'); gun.reload_base.gotoAndStop(1);  }
