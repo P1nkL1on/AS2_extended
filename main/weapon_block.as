@@ -1,17 +1,17 @@
 ﻿class weapon_block {
 	
-			function Load (){
+			static function Load (){
 				_root.console_trace ("* Weapon block loaded");
 			}
 	
 		// на сколько затемнять пуху, которая висит за спиной
-			var shadow_level = 75;	
+			static var shadow_level = 75;	
 		// существо, которое может держать пушку (предположительно любую)
 		// устанавливает массив пушек пустым, активное оружие -1, pQ, wA, wL - предыдущие значения этимх перемененных (wL == weapon.length)
-			function set_a_gun_holder (gunner:MovieClip){ gunner.weapons = new Array(); gunner.weaponActive = -1; gunner.pQ = 0; gunner.wA = -1; gunner.wL = 0;  }			
+			static function set_a_gun_holder (gunner:MovieClip){ gunner.weapons = new Array(); gunner.weaponActive = -1; gunner.pQ = 0; gunner.wA = -1; gunner.wL = 0;  }			
 		
 		// каждый апдейт на держателе пушек
-			function being_a_gun_holder (gunner:MovieClip){
+			static function being_a_gun_holder (gunner:MovieClip){
 					if (gunner.weaponActive != gunner.wA || gunner.weapons.length != gunner.wL){ gunner.wA = gunner.weaponActive;	gunner.wL = gunner.weapons.length;					//запрос на перераспределение глубин только при смене активного или добавлении нового
 						for (var i=0; i<gunner.weapons.length; i++){ if (i == gunner.weaponActive)																						//
 						{gunner.weapons[i].swapDepths( gunner.getDepth()+1 );  gunner.weapons[i].clr.setTransform({rb:0, gb:0, bb:0});}													//светлое оружие в руках
@@ -20,13 +20,13 @@
 					if ((gunner.keypresses[7]>0 && gunner.keypresses[7]<60) && gunner.weapons.length>=2)																				//если у владельца есть желание сменить пушку
 						{ gunner.keypresses[7] = 360;  gunner.weapons[ gunner.weaponActive ]._rotation = random(40)-20;																	//предыдущее оружие неактивное случайно повернуто и за спиной
 					gunner.weaponActive = (gunner.weaponActive+1)%gunner.weapons.length; gunner.weapons[ gunner.weaponActive ].missValue = (random(40)/100+.2)*Math.PI*(random(2)*2-1);	//небольшая тряска при смене
-						_root.sound_start(gunner.weapons[ gunner.weaponActive ].sound_equip);}}																							//меняем активное оружие, ставим его активным, суем в руки, проигрываем звук
+						sound_lib.sound_start(gunner.weapons[ gunner.weaponActive ].sound_equip);}}																							//меняем активное оружие, ставим его активным, суем в руки, проигрываем звук
 			
 		
 		// делает пушку пушкой
 		// ammo_type == {0 - bullets, 1 - shells, 2 - energys, 3 - bombs, -1 - none}
 		// function set_a_gun(GUN, ammo_type (0), bullet_type (pistol_bullet), bullet_spread(0), realoadPartly(18), ammo(6), reloadFull(120), automatic(false), host_dist(20), ammo_per_shot(1), bullet_per_shot(1), otadat(10))
-			function set_a_gun (who:MovieClip, ammo_type, bullet_type:String, bullet_spread:Number, realoadPartly:Number, ammo:Number, reloadFull:Number, automatic:Boolean,
+			static function set_a_gun (who:MovieClip, ammo_type, bullet_type:String, bullet_spread:Number, realoadPartly:Number, ammo:Number, reloadFull:Number, automatic:Boolean,
 								host_dist:Number, ammo_per_shot:Number, bullet_per_shot:Number, otdat:Number, effect_path:String, spread_stats:Array,
 								bullet_speed){
 					if (who == null) return; who.stop();
@@ -53,21 +53,21 @@
 					who.current_ammo = who.ammo; who.watch1 = 0; who.ot_dist = 0; who.never_hosted = true;
 			}
 		//назначает пушке владельца
-			function set_a_gun_host (gun:MovieClip, host:MovieClip){
-				gun.host = host; _root.sound_start ( gun.sound_equip+"" ); 			// назначает нового хоста, проигрывает звук взятия пушки (на самой пушке)
+			static function set_a_gun_host (gun:MovieClip, host:MovieClip){
+				gun.host = host; sound_lib.sound_start ( gun.sound_equip+"" ); 			// назначает нового хоста, проигрывает звук взятия пушки (на самой пушке)
 				host.weapons.push(gun); host.weaponActive = host.weapons.length-1;	// добавляет оружие в массив оружий владельца, активным делает индекс последнего оружия в массиве (только что добавленной пушки)
 				if (gun.never_hosted){ gun.never_hosted = false; if (gun.ammo_type >= 0)gun.host.Ammo[gun.ammo_type]+= gun.current_ammo; }
 					// если никогда не была ношена, сделать ношенной и 1 раз дать владельцу своё боезапас ввиде патронов.
 			}
 		//being a GUN
-			var ang = 0;
-			function being_a_gun (gun:MovieClip){
+			static var ang = 0;
+			static function being_a_gun (gun:MovieClip){
 				//хозяин впринципе не определен (null, если его таки нет)
 					if (gun.host!= null && gun.host == undefined){ _root.console_trace('# '+gun+' have no host!');return;}			//no host check
 				//если нет хозяина, то это просто валяющийся кусок железа
 					if (gun.host == null){
 						// если масса еще не определена, значит оружие никогда не было представлено, как физическое тело. Добавляем ему интерфейс оного, отправляем в свободный полет
-							if (gun.mass == undefined){ _root.set_moveble(gun,0, 1.2, 0.1, 1); gun.ground = false; }else{ _root.being_moveble(gun); }	//falling and mooving
+							if (gun.mass == undefined){ inter_block.set_moveble(gun,0, 1.2, 0.1, 1); gun.ground = false; }else{ inter_block.being_moveble(gun); }	//falling and mooving
 						// проверка подбора оружия (касание, координатное расстояние, нажатая клаива взаимодействия)
 							for (var man = 0; man < _root.all_hitable.length; man++)
 								if (_root.all_hitable[man].controlable == true && _root.all_hitable[man].hitTest(gun) && (_root.all_hitable[man].keypresses[5] > 1)){ if ( Math.abs( gun._x - _root.all_hitable[man]._x  )+Math.abs(gun._y - _root.all_hitable[man]._y)<40 ){set_a_gun_host (gun, _root.all_hitable[man]);   return;}} 
@@ -79,7 +79,7 @@
 				//если хозяин есть, но он эту пушку решил выкинуть к чертям
 					if (gun.host.wantDrop){
 								gun.host.keypresses[6] = 360; gun.host.wantDrop = false; gun.host.weapons.splice(gun.host.weaponActive,1); gun.host.weaponActive--; if (gun.host.weapons.length>0 && gun.host.weaponActive < 0){gun.host.weaponActive = 0;}//вычеркнуть из списка оружия владельца и сделать следующее оружие активным
-								if (gun.mass == undefined){ _root.set_moveble(gun,0, 1.2, 0.1, 1); }	//если она не была объектом до этого
+								if (gun.mass == undefined){ inter_block.set_moveble(gun,0, 1.2, 0.1, 1); }	//если она не была объектом до этого
 								gun.ground = false; if (gun.host.keypresses[3]==0 || gun.host.dead){ if (gun.host.dead) ang = -Math.PI*( .25+random(50)/100 );var pow = (5+random(20)/10)/gun.mass; gun.sp_y = pow*Math.sin(ang); gun.sp_x0 = .4*pow*Math.cos(ang);} gun.host = null; gun._rotation += random(121)-60; return; }			//пушка выкинута. ретурн.
 				//каждый кадр смотреть туда, куда целится хозяин. Вне времени.
 					if (gun.host.followX == undefined || gun.host.followY == undefined){_root.console_trace("# "+gun+"'s has no 'follow' variable!"); return;}			//у хозяина нет параметра цели. нечего тут ловить
@@ -99,7 +99,7 @@
 						if (Key.isDown(1))gun.watch1++; else gun.watch1 = 0;		//when mouse is clicked || R is pressed
 							gun.reload_timer -= (gun.reload_timer>0)*1;
 						//no ammo case
-							if (gun.reload_timer == 0 && gun.watch1 == 1 && !(gun.current_ammo >= gun.ammo_per_shot && gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))_root.sound_start('items/no_ammo');
+							if (gun.reload_timer == 0 && gun.watch1 == 1 && !(gun.current_ammo >= gun.ammo_per_shot && ((gun.ammo_type<0)||(gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))))sound_lib.sound_start('items/no_ammo');
 						//reload
 							if (gun.reload_timer<=0 && ((gun.current_ammo > 0 && gun.watch1 != 1 && gun.host.wantReload) || (gun.current_ammo == 0 && gun.watch1 + gun.host.wantReload*1==1)))
 								{ gun.reload_timer += gun.reloadFull; gun.ost = gun.current_ammo; gun.current_ammo = gun.ammo; gun.gotoAndStop('hand_reload'); gun.reload_base.gotoAndStop(1);  }
@@ -108,26 +108,26 @@
 							if (!shot_this_frame && gun.reload_timer<=0 && ((!gun.automatic && gun.watch1 == 1) || (gun.automatic && gun.watch1 > 0))){ /*SHOT*/ 
 								//attach a bullet
 										shot_this_frame = true;																																									// в этот кадр уже стреляли
-									if (gun.current_ammo >= gun.ammo_per_shot && gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot){ gun.current_ammo -= gun.ammo_per_shot;  gun.host.Ammo[gun.ammo_type] -= gun.ammo_per_shot;
+									if (gun.current_ammo >= gun.ammo_per_shot && ((gun.ammo_type<0)||(gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))){ gun.current_ammo -= gun.ammo_per_shot;  gun.host.Ammo[gun.ammo_type] -= gun.ammo_per_shot;
 										if (gun.current_ammo > 0) {gun.reload_timer += gun.realoadPartly; gun.gotoAndStop('fire');}																								// обойма езе не кончилась \ спавн звук выстрела
 															else  {gun.reload_timer += gun.realoadPartly+gun.reloadFull; gun.current_ammo = gun.ammo; gun.gotoAndStop('reload'); gun.reload_base.gotoAndStop(1); gun.ost = 0;}	// обойма кончилась \ спавн звук перезарядки
 										var dulo_x = gun._x + Math.cos(gun._rotation/180*Math.PI) * (gun.dulo._x)  + Math.cos(gun._rotation/180*Math.PI+Math.PI/2) * gun.dulo._y *gun._yscale/gun.ys;							// просчет точки вылета пули из ствола
 										var dulo_y = gun._y + Math.sin(gun._rotation/180*Math.PI) * (gun.dulo._x)  + Math.sin(gun._rotation/180*Math.PI+Math.PI/2) * gun.dulo._y*gun._yscale/gun.ys;
 										var where = _root.enemy_bullets; if (gun.host.team == 1)where = _root.hero_bullets;
-										_root.export_effect (where, gun.effect_path+"", dulo_x, dulo_y, gun._rotation/180*Math.PI);
+										export_block.export_effect (where, gun.effect_path+"", dulo_x, dulo_y, gun._rotation/180*Math.PI);
 										for (var shot=0; shot<gun.bullet_per_shot; shot++){																																		// для каждой пули спавнить ее и увеличивать отдачу
 												gun.ot_dist += gun.otdat; 
 												gun.host.sp_x0 += - 0.02*gun.otdat * Math.cos(gun._rotation / 180 * Math.PI);
-												_root.spawn_a_bullet (where, gun.bullet_type, dulo_x, dulo_y, gun.bullet_speed, gun._rotation/180*Math.PI + random(Math.round(gun.bullet_spread*1000))/1000 - gun.bullet_spread/2, 'default', gun.spread_stats, gun.host);}}// bullet_spawn
+												bullet_block.spawn_a_bullet (where, gun.bullet_type, dulo_x, dulo_y, gun.bullet_speed, gun._rotation/180*Math.PI + random(Math.round(gun.bullet_spread*1000))/1000 - gun.bullet_spread/2, 'default', gun.spread_stats, gun.host);}}// bullet_spawn
 								}
 							}					
 			}
 		//gun reloading help functions
 		// интерфейс прикрепляется к части ствола (внутри мувиклипа пушки), которая имеет анимацию перезаряжания
 		// maxFrame - последний кадр перезарядки (в зависимости от него и времени будет рассчитана скорость анимации перезарядки)
-			function set_reloader (gun:MovieClip, maxFrame:Number){ gun.anim = 0; gun.stop(); gun.spd = (Math.round(gun._parent.reload_timer/maxFrame+.4)); }
+			static function set_reloader (gun:MovieClip, maxFrame:Number){ gun.anim = 0; gun.stop(); gun.spd = (Math.round(gun._parent.reload_timer/maxFrame+.4)); }
 		// ф-я, позволяющая каждый апдейт следовать интерфейсу перезарядной анимации
-			function being_reloader (gun:MovieClip){++gun.anim; if (gun._parent.host!=null && gun._parent.getDepth() > gun._parent.host.getDepth())_root.animate(gun,1,100,gun.spd);}
+			static function being_reloader (gun:MovieClip){++gun.anim; if (gun._parent.host!=null && gun._parent.getDepth() > gun._parent.host.getDepth())anim_block.animate(gun,1,100,gun.spd);}
 			
 	
 }

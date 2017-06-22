@@ -1,21 +1,21 @@
 ﻿class sound_lib {
 		//loading start
-			var loading_start = true;
-			var loading_ever_started = false;
+			static var loading_start = true;				// request to library sound loading start
+			static var loading_ever_started = false;		// have it been started or not? - need for enterFrame correct using
 		// Folder - папка, в которой находится звуковая библиотека.
-			var Folder:String = 'mice_engine_sound_lib';																							//папка, в которой находится библиотека звуков
+			static var Folder:String = 'mice_engine_sound_lib';																							//папка, в которой находится библиотека звуков
 		// libr - массив с названиями (путями) до файлов из текущего места без учета окончания ,mp3
-			var libr:Array = new Array(); var boop:Sound;  			
-			var player_models:Array = new Array('mouse','hamster','robot','jent');							var player_sounds:Array = new Array('jump','hited','dead');
-			var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket'); 					var weapon_actions:Array = new Array('fire','reload','equip');
-			var bullet_types:Array = new Array('bullets','shells','bombs','energys'); 						var bullet_actions:Array = new Array('hit','get');
-			var ground_types:Array = new Array('common','met','water','bullets','shells','glass','robot'); 												
-			var ground_nums:Array = new Array(       15,    4,      4,        6,       5,	   4,      2);
-			var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad');
+			static var libr:Array = new Array(); var boop:Sound;  			
+			static var player_models:Array = new Array('mouse','hamster','robot','jent');							static var player_sounds:Array = new Array('jump','hited','dead');
+			static var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket'); 					static var weapon_actions:Array = new Array('fire','reload','equip');
+			static var bullet_types:Array = new Array('bullets','shells','bombs','energys'); 						static var bullet_actions:Array = new Array('hit','get');
+			static var ground_types:Array = new Array('common','met','water','bullets','shells','glass','robot'); 												
+			static var ground_nums:Array = new Array(       15,    4,      4,        6,       5,	   4,      2);
+			static var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad');
 			
-			var sounds:Array = new Array();																											//all the sounds
-			var all_sounds_loaded:Boolean = false;																									//обновляем загрузчик и ждем конца
-			public function Load(){
+			static var sounds:Array = new Array();																											//all the sounds
+			static var all_sounds_loaded:Boolean = false;																									//обновляем загрузчик и ждем конца
+			static public function Load(){
 				
 				if (libr.length > 0){_root.console_trace ('@ Sound library recompiled');return;}
 					 
@@ -32,26 +32,26 @@
 			}
 			
 		// Воспроизвести звук по имени. (Звук выбирается из массива sounds)
-			public function sound_start(nam:String){
+			static public function sound_start(nam:String){
 				for (var i=0; i<sounds.length; i++)
 					if (sounds[i].name.indexOf(nam)>=0){ sounds[i].start(0,1); return; }															//воспроизвести звук совпадающий по имени
 				_root.console_trace("# No sound '"+nam+"' in library!"); 																			//если звука нет, бупнем и сообщим об ошибкe
 			}
 		// Берет у указанного персонажа sound_profile, если такой конечно есть и по его пути находит требуемый звук.
-			public function character_sound_start (who:MovieClip, nam:String){
+			static public function character_sound_start (who:MovieClip, nam:String){
 				if (who.sound_profile != undefined)sound_start ('npc/voice/'+who.sound_profile+'/'+nam);
 			}
 		
-		var sp_ID = 0;	// индекс папки, в которой хранится нужный звук
+		static var sp_ID = 0;	// индекс папки, в которой хранится нужный звук
 		// var ground_types:Array = new Array('common','met','bullets','robot','water'); 	
 			// { spec - 0\undefined - nothing special, 1 - quiet step, 2 - wall step, 3 - in water step }
-			public function footstep_sound (who:MovieClip){
+			static public function footstep_sound (who:MovieClip){
 				sp_ID = 0;
 				if (who.sound_profile!=undefined)
 					for(var i=0; i<ground_types.length; i++)if (ground_types[i] == who.sound_profile){ sp_ID = i; break; }
 			// special cases
-				if (who.last_ground.is_water)sp_ID = 2;
-				if (who.last_ground.is_wall)sp_ID = 1;
+				if (who.last_ground.is_water)sp_ID = 2;	// если почва была водой - то автоматически сменять звук на водяной
+				if (who.last_ground.is_wall)sp_ID = 1;	
 				sound_start ("npc/footsteps/"+ground_types[sp_ID]+"/stp"+(random(ground_nums[sp_ID])+1));
 			}
 
@@ -61,9 +61,12 @@
 		// find sound <filter> - вывод всех звуков, соот-х фильтру.
 		// test sound [x] - проиграть единожды звук за номером x
 		// test all sounds - звуковой тест всего всего	
-		var max = 0; var now = 0;		
-			public function EnterFrame(){
+		static var max = 0; static var now = 0;		
+		static function EnterFrame(){
+				//trace('sound_lib: ent fr'); return;
 				if (loading_start){ trace('inlib : started');
+					// начало непосредственной загрузки - обявляет запрос на зугрузку по всем адресам
+					// этот же участок кода отвечает за перезагрузку (подзагрузку) звуков при смене адреса библиотеки или др.
 						loading_start = false; loading_ever_started = true;
 							for (var i=0; i<libr.length; i++)sounds.push(new Sound());																		// заполняем его пустыми новыми звуками
 							for (var i=0; i<libr.length; i++){																								// ставим каждый на загрузку соответствующего адреса
@@ -71,7 +74,8 @@
 								sounds[i].onLoad = function(success:Boolean):Void { if (success){ /*nice!*/}}		 										// при зугрузке трассируем сообщение об успехе, иначе о неудаче
 							}			
 					}
-				if (!loading_ever_started || all_sounds_loaded) return;																											// после загрузки всех звуков (хотя бы попытки) больше ничего не делать
+				// если загрузка никогда не начиналась 0 не поступало реквестов или наоборот все загружено и нет реквестов на перезагрузку
+				if (!loading_ever_started || all_sounds_loaded) return;																					// после загрузки всех звуков (хотя бы попытки) больше ничего не делать
 							max = 0; now = 0;																	// проход по всем звукам
 							for (var i=0; i<sounds.length; i++)																							// если звук не забупан, то их текущий\мак размер добавляются в сумму
 								{	if (sounds[i].isBoop != true){max += sounds[i].getBytesTotal(); now += sounds[i].getBytesLoaded(); }				// считается и выводится в общий текстбокс процент загрузки незабупаных звуков
@@ -80,6 +84,8 @@
 										sounds[i] = new Sound(); sounds[i].name = temp; sounds[i].attachSound("boop"); sounds[i].isBoop = true;} 		// буп, если что, можно заменить на тишину, или просто убрать соответствующие строки
 								}
 							if (now == max && !all_sounds_loaded){all_sounds_loaded = true; 
+							
+								while (sounds[sounds.length-1] == undefined)sounds.pop();// cheking undefined sounds
 								var loaded = 0; for (var i=0; i<sounds.length; i++)if (!sounds[i].isBoop)loaded++;	 // подсчет количество незабупанных звуков					
 								var par = "completely "; if(loaded<libr.length)par = "partly "; if (loaded<=0)par = "was not ";
 								_root.console_trace('> Sound library '+par+'loaded ('+loaded+'/'+libr.length+')');												//сообщение о количестве загруженных звуков
@@ -96,8 +102,8 @@
 							}	
 			}
 			
-		var loader_dist = 40; var res:String = "";
-			public function get_current_load ():String{
+		static var loader_dist = 40; static var res:String = "";
+			static public function get_current_load ():String{
 				if (max == 0 || now==undefined || max == undefined)return "> Sounds are not loading";		// not loading in a moment
 				if (now == max && max!=0)return ">Sounds loading finished";
 					res = '> Sounds loading: '+Math.round(now/max*100)+" % |"; for (var i=0; i<loader_dist; i++)if (i<now/max*loader_dist)res+="▐";else res+=" ";

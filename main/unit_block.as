@@ -3,12 +3,12 @@
 	// в юните, который подлежит спавну, НЕ ДОЛЖНО быть внутренней enterFrame функции, чтобы они не наслаивались друг на друга
 	// то, что должно проиойти таким образом заворачивать в ф-ю  function InnerEnterFrame ():Void{...}
 	
-		function Load(){
+		static function Load(){
 			_root.console_trace("* Unit AI block loaded");
 		}
 	
-		var now_units:Number = 0;
-		var total_units:Number = -1;
+		static var now_units:Number = 0;
+		static var total_units:Number = -1;
 		
 	// Спавнит юнита из библиотеки на сцену (куда хочешь)
 	// path - указание пути к инстансу в библиотеке, where - мувиклип окр. среды
@@ -16,7 +16,7 @@
 	//		{ path = "jent", AIpath = "jent_shooting", power = "10"} || {  path = "jent", AIpath = "jent_passive", power = "0" }
 	// team - команда, x0, y0,  - координаты
 	// power - задаёт параметры соответственно АИ поведению
-		function spawn_a_unit (where, path:String, AIpath:String, power:Number, x0, y0, team:Number, direct:Number){
+		static function spawn_a_unit (where, path:String, AIpath:String, power:Number, x0, y0, team:Number, direct:Number){
 			// стандартные значения
 				if (where == 'default' || where == undefined) {if (_root.unit_layer == undefined)where = _root; else where = _root.unit_layer;}
 				if (team == undefined)team = 0; if (x0 == undefined || y0 == undefined){ x0 = 0; y0 = 0; _root.console_trace("# Invalid spawn coordinates (_x, _y)"); }
@@ -29,23 +29,23 @@
 			// внут пр-ые
 				who.dead_timer = 0;
 			// стандартные процедуры
-				_root.set_moveble (who, .02, 1.04);			// все юниты перемещаются
+				inter_block.set_moveble (who, .02, 1.04);			// все юниты перемещаются
 				who.ground = false;							// переопределение земли
-				_root.set_health (who, 10, .001);			// и имеют стандартно 10 здоровья
-				_root.set_hitable (who, team);				// и могут быть отпинаны
+				inter_block.set_health (who, 10, .001);			// и имеют стандартно 10 здоровья
+				inter_block.set_hitable (who, team);				// и могут быть отпинаны
 				set_AI (who, AIpath, power);				// задаем интеллект
 				who.onEnterFrame = function (){
 					// какие-то общие черты всех юнитов
-						_root.units_block.being_common (this);
+						being_common (this);
 					// персональные в зависимости от АИ
-						_root.units_block.being_AI(this);
+						being_AI(this);
 					// исчезание
-						_root.units_block.being_dead_remove (this)
+						being_dead_remove (this)
 						
 				}
 				// корректное удаление из массива all_hitable
 				who.onUnload = function (){
-					_root.units_block.now_units --; 
+					now_units --; 
 					for (var i=0; i<this.borned.length; i++)
 						this.borned[i].removeMovieClip(); 	// очищаешь все, что создал для себя
 					var ID = Number.POSITIVE_INFINITY; 	// чудеса техники - поиск и сдвиг в одном цикле!
@@ -53,18 +53,18 @@
 					if (ID < _root.all_hitable.length) _root.all_hitable.pop();
 				}
 		}
-		var decay_time:Number = 600;
-		function being_dead_remove (who:MovieClip){
+		static var decay_time:Number = 600;
+		static function being_dead_remove (who:MovieClip){
 			who.dead_timer += _root.timeElapsed*(who.dead == true);
 			who._visible =(( Math.round(who.dead_timer/5)%2 == 0) || ( (who.dead_timer < decay_time / 6*5) ));
 			if (who.dead_timer > decay_time)who.removeMovieClip();
 		}
 		
 		// для сокращения писанины
-		function being_common (who:MovieClip){
+		static function being_common (who:MovieClip){
 			who.InnerEnterFrame ();
-			_root.being_moveble (who);
-			_root.being_hitable (who);
+			inter_block.being_moveble (who);
+			inter_block.being_hitable (who);
 		}
 // AI LOAD BLOCK // AI LOAD BLOCK // AI LOAD BLOCK // AI LOAD BLOCK // AI LOAD BLOCK 
 // AI LOAD BLOCK // AI LOAD BLOCK // AI LOAD BLOCK // AI LOAD BLOCK // AI LOAD BLOCK 
@@ -72,7 +72,7 @@
 	
 	// AI intellectuals
 	// настраивает профиль юнита с точки зрения AI
-		function set_AI (who:MovieClip, AIpath:String, power:Number):Boolean{
+		static function set_AI (who:MovieClip, AIpath:String, power:Number):Boolean{
 			// стандартные значения пути и силы. Путь при неправильности - выкидывает к чертям
 				if (AIpath == undefined){ _root.console_trace("# Invalid AI path"); return false;}
 				if (power == undefined){ _root.console_trace("# Invalid power given. Set to 1"); power = 1; }
@@ -128,10 +128,10 @@
 // ENTER FRAME BLOCK // ENTER FRAME BLOCK // ENTER FRAME BLOCK // ENTER FRAME BLOCK
 // ENTER FRAME BLOCK // ENTER FRAME BLOCK // ENTER FRAME BLOCK // ENTER FRAME BLOCK
 // ENTER FRAME BLOCK // ENTER FRAME BLOCK // ENTER FRAME BLOCK // ENTER FRAME BLOCK
-	var WarningTime:Number = 120 * 15;
+	static var WarningTime:Number = 120 * 15;
 	// AI intellectuals
 	// настраивает профиль юнита с точки зрения AI
-		function being_AI (who:MovieClip){
+		static function being_AI (who:MovieClip){
 			if (who.AI_profile == undefined){ _root.console_trace("# "+who._name+" has no AI profile");return; }
 			
 			// общие для джентов, роботов и др
@@ -150,7 +150,7 @@
 									//  standart scan
 										if (who.targ == null && who.targ_was == null)
 											{ 	if (who.hp < who.hp2)who.targ = who.hitBy; who.hp2 = who.hp;
-												if (isNaN(who.targ_x)){who.watch_angle -= Math.PI / 1600; who.scanEvery = 60; who.warned = true;}		// scan passivly first
+												if (isNaN(who.targ_x)){who.watch_angle = (who.watch_angle-Math.PI / 800); if (who.watch_angle<-Math.PI)who.watch_angle+=2*Math.PI; who.scanEvery = 60; who.warned = true;}		// scan passivly first
 																else{ if (who.warning_time-->0){
 																		who.scanEvery = 20;
 																		who.targ_x += who.targ_sp_x; who.targ_sp_x /= 1.02; // approxxime movement
@@ -159,7 +159,7 @@
 																	  	
 																	  else{ who.targ_x = Number.NaN; who.targ_y = Number.NaN; }}}	
 										else{ who.scanEvery = 4; if (who.targ!=null){watchTo(who, who.targ); 
-											if (who.warning_time <= 0){_root.sound_start("npc/other/alert"); /*fun*/who.sp_y -= 4;}// SPOTTED
+											if (who.warning_time <= 0){sound_lib.sound_start("npc/other/alert"); /*fun*/who.sp_y -= 4;}// SPOTTED
 											who.warning_time = WarningTime;
 											if (random(10)==0 && who.warned){who.warned =  !( inform_other(who)); }// inform all other
 										// remember target movement
@@ -187,9 +187,9 @@
 					case "jent_shooting":
 						if (who.hp>0){for (var i=0; i<_root.updates; i++){	
 							if ((who.watchTo == null || who.watchTo.hp<=0) && who.gun_timer%120==0)who.watchTo = chooseClosestTarget(who);//choosing a target
-						
+							if (who.watchTo == null)return;	// no target bich
 							if (who.gun_timer++%15==0 && who.bullets-->0)										// bullet timing
-								_root.spawn_a_bullet ( _root.enemy_bullets, 'enemy_rifle_bullet', who._x, who._y - 50, 'default',							// shooting
+								bullet_block.spawn_a_bullet ( _root.enemy_bullets, 'enemy_rifle_bullet', who._x, who._y - 50, 'default',							// shooting
 													Math.atan2(who._y - who.watchTo._y - who.watchTo._height/2, who._x - who.watchTo._x)+Math.PI, 'default', new Array(4,5), who);	// shooting
 							if (who.gun_timer%240 == 0 && who.watchTo.hp > 0)who.bullets = Math.round((3+random(3))*who.AI_power);}}	// reloading
 						else{	drop_random_items(who);}
@@ -204,7 +204,7 @@
 		
 // special functions
 	// вспомогательные модули
-		function chooseClosestTarget (who:MovieClip):MovieClip{
+		static function chooseClosestTarget (who:MovieClip):MovieClip{
 			can_be_target = new Array();
 				for (var i=0; i<_root.all_hitable.length; i++)
 					if (_root.all_hitable[i].team >0 && _root.all_hitable[i].team != who.team && _root.all_hitable[i].hp>0)
@@ -216,7 +216,7 @@
 		
 		// target choosing
 	// для сортировки целей по расстояниям
-		function order(t1, t2):Number { 
+		static function order(t1, t2):Number { 
 		// дистанция высчитывается между началами мувиклипов
 			var dist1 = Math.sqrt(Math.pow(_x - t1._x,2)+Math.pow(_y - t1._y + t1._height/2,2));
 			var dist2 = Math.sqrt(Math.pow(_x - t2._x,2)+Math.pow(_y - t2._y + t2._height/2,2));
@@ -225,11 +225,11 @@
 	// select someone in front of view
 	// находит цель по смотрящему, его углу обзора и дистанции максимального взгляда
 	// необходимый парметр смотрящего :: watch_angle - куда он смотрит сейчас
-		var can_be_target = new Array();
-		var en = null;
-		var ang = 0;
-		var fin_ang = 0;
-		function chooseClosestTargetAngle (who:MovieClip, angle:Number, dist:Number):MovieClip{
+		static var can_be_target = new Array();
+		static var en = null;
+		static var ang = 0;
+		static var fin_ang = 0;
+		static function chooseClosestTargetAngle (who:MovieClip, angle:Number, dist:Number):MovieClip{
 			// определенее угла просмотра
 				if (who.watch_angle == undefined){ _root.console_trace("# "+who._name+" have no watch_agnle!"); who.watch_angle = 0; }
 			// корректировка watch_agnle, если он не в диапазоне [0..2*PI]
@@ -256,7 +256,7 @@
 		}
 		
 	// выставляет угол зрения на соотсветствующий угол
-		function watchTo (who:MovieClip, x0, y0){
+		static function watchTo (who:MovieClip, x0, y0){
 			if (y0 == undefined){
 				who.watch_angle = Math.atan2( -who._y + who._height/2 + x0._y,-who._x + x0._x );
 			}else{
@@ -266,14 +266,14 @@
 	// become more standart movement
 	// goto = {-1, 0, 1}
 	// wantJump = {-1, 0, 1}
-		function wantMove (who:MovieClip, sp_x_max:Number, goto:Number, sp_y_max:Number, wantJump:Number){
+		static function wantMove (who:MovieClip, sp_x_max:Number, goto:Number, sp_y_max:Number, wantJump:Number){
 			if (goto > 0) who.sp_x += goto*who.acs * (who.sp_x < sp_x_max)*(1 + 2*(who.sp_x < 0));
 			if (goto < 0) who.sp_x += goto*who.acs * (who.sp_x > -sp_x_max)*(1 + 2*(who.sp_x > 0));
 			if (goto == 0 && who.ground){if (Math.abs(who.sp_x)>.1)who.sp_x /= who.tormoz; else who.sp_x = 0;}
 		}
 	// massive alert!
-		var alarmed = 0;
-		function inform_other (who:MovieClip):Boolean{
+		static var alarmed = 0;
+		static function inform_other (who:MovieClip):Boolean{
 			alarmed = 0;
 			for (var i=0; i<_root.all_hitable.length; i++)
 				if (_root.all_hitable[i].warning_time <= 0 && _root.all_hitable[i].team == who.team && Math.sqrt(Math.pow(_root.all_hitable[i]._x - who._x,2) + Math.pow(_root.all_hitable[i]._y - who._y,2))<300)
@@ -281,11 +281,11 @@
 			return (alarmed>0);
 		}
 		
-		function drop_random_items (who){
+		static function drop_random_items (who){
 			for (var n=0;n<_root.updates; n++){																					//
 					if ( random(5)==0 && who.drops-->0){																		// drop goods on death
 							var isMed = (random(3) == 0);																		// randomise drops
-							_root.spawn_pickup (who._x, who._y - 20, (1+random(4))*!isMed + -1*isMed, random(3), 240*10);		// spawn drops
+							ammo_block.spawn_pickup (who._x, who._y - 20, (1+random(4))*!isMed + -1*isMed, random(3), 240*10);		// spawn drops
 				}}
 		}
 }
