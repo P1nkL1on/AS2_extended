@@ -4,11 +4,18 @@
 			static var loading_ever_started = false;		// have it been started or not? - need for enterFrame correct using
 		// Folder - папка, в которой находится звуковая библиотека.
 			static var Folder:String = 'mice_engine_sound_lib';																							//папка, в которой находится библиотека звуков
-		// libr - массив с названиями (путями) до файлов из текущего места без учета окончания ,mp3
+		// libr - массив с названиями (путями) до файлов из текуще		го места без учета окончания ,mp3
+		
 			static var libr:Array = new Array(); var boop:Sound;  			
-			static var player_models:Array = new Array('mouse','hamster','robot','jent');							static var player_sounds:Array = new Array('jump','hited','dead');
-			static var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket'); 					static var weapon_actions:Array = new Array('fire','reload','equip');
-			static var bullet_types:Array = new Array('bullets','shells','bombs','energys'); 						static var bullet_actions:Array = new Array('hit','get');
+			static var player_models:Array = new Array('mouse','hamster','robot','jent');					
+			static var player_sounds:Array = new Array('jump','hited','dead');
+			
+			static var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket','tommy');
+			static var weapon_actions:Array = new Array('fire','reload','equip');
+			
+			static var bullet_types:Array = new Array('bullets','shells','bombs','energys'); 	
+			static var bullet_actions:Array = new Array('hit','get');
+			
 			static var ground_types:Array = new Array('common','met','water','bullets','shells','glass','robot'); 												
 			static var ground_nums:Array = new Array(       15,    4,      4,        6,       5,	   4,      2);
 			static var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad');

@@ -16,9 +16,9 @@
 		// Если вместо одного числа исопльзуется массив, то это означает, что скорость должна быть случайной м-ду двумя этими параметрами.
 		// Третий массив отвечает за дефолтное количество спредов при спавне пули. 
 		// НАПОМИНАНИЕ: и скорость и кол-во спредов может быть задано самостоятельно, без какой-либо опоры или привязки к этим массивам.
-			static var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet","rocket_bullet");
-			static var bullet_speed_array = new Array(              7,      new Array(1,10),             2);
-			static var bullet_spread_array= new Array(              6,   		       	  4,             10);
+			static var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet","rocket_bullet","circle_bullet");
+			static var bullet_speed_array = new Array(              7,     new Array(1,10),              2,				 5);
+			static var bullet_spread_array= new Array(              6,  			  	 4,             10,				 3);
 	// Собственно элементарная функция для получения средне-случайного значения м-ду двумя числами.
 			static function rnd_spd ( min, max ){ return  min + random(Math.round(100*(max-min)))/100 ; }
 			
@@ -174,6 +174,45 @@
 						gotoAndStop(who.dead_frame+who.frame_offset);								// go to 'dead' frame
 						if (who.end._currentframe >= who.dead_effect_frame)who.removeMovieClip();
 				}
+			}
+		// 
+		// 
+		// 
+		static var x_c = 0; static var y_c = 0; static var ang_c = 0; static var ky = 1;
+			static function spawn_shell (where, frame, direct:MovieClip, speed, angle_spread){
+				// коэффицент 1 -1 в зависимости от поворота пистолета
+					ky = direct._parent._yscale / direct._parent.ys;
+				// угол для высчета координат
+					ang_c = direct._parent._rotation / 180 * Math.PI;		
+				// подсчет координат
+						x_c = direct._parent._x + (direct._x * Math.cos(ang_c) + direct._y * Math.cos(ang_c + Math.PI/2) * ky);
+						y_c = direct._parent._y + (direct._x * Math.sin(ang_c) + direct._y * Math.sin(ang_c + Math.PI/2) * ky);
+				// пересчет координат
+					//if (ky < 0){
+						//x_c = direct._parent._x - (-direct._x * Math.cos(ang_c) + direct._x * Math.sin(ang_c));
+						//y_c = direct._parent._y - (direct._y * Math.sin(ang_c) + direct._y * Math.cos(ang_c));}
+					_root.tt._x = x_c; _root.tt._y = y_c;
+				// угол под которым вылетет пуля
+					ang_c = (direct._parent._rotation + direct._rotation ); if (ky<0) ang_c = (direct._parent._rotation - direct._rotation + 180);
+				// from grad to rad && randomise an angle
+					ang_c = ang_c / 180 * Math.PI;
+					ang_c += random(angle_spread*100)/100-angle_spread/2;
+					_root.tt._rotation = ang_c / Math.PI * 180;
+				export_block.export_object ('default','shell',200+random(40), x_c, y_c,
+										speed * Math.cos(ang_c) * ky, speed * Math.sin(ang_c) * ky,.2,1.5,1, false,.3);
+				_root.last_exported.gotoAndStop(frame);
+				
+				/*
+					angl_cor = _rotation/180*Math.PI - Math.PI/4; rad = 7;						//autodetect position
+					angl_vibros = _rotation/180*Math.PI - (3+random(100)/100)*Math.PI/4;		//angle of start_fly
+						
+					if ((_yscale/ys)<1) {angl_vibros =  180 + angl_vibros + 45;	angl_cor = _rotation/180*Math.PI - 3* Math.PI/4}				//auto angle ys/ysscale FIX
+					spd = 3+random(30)/10;														//speed randomiser
+					export_block.export_object ('default', "shell", 
+										 200+random(40), _x + 7*Math.cos( angl_cor ), _y + 7*Math.sin( angl_cor )*_yscale/ys,
+										 spd * Math.cos(angl_vibros), spd * Math.sin(angl_vibros),.2,1.5,1, false,.3);
+					_root.last_exported.gotoAndStop("pistol_shell");
+				*/
 			}
 	
 }
