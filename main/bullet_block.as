@@ -16,9 +16,9 @@
 		// Если вместо одного числа исопльзуется массив, то это означает, что скорость должна быть случайной м-ду двумя этими параметрами.
 		// Третий массив отвечает за дефолтное количество спредов при спавне пули. 
 		// НАПОМИНАНИЕ: и скорость и кол-во спредов может быть задано самостоятельно, без какой-либо опоры или привязки к этим массивам.
-			static var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet","rocket_bullet","circle_bullet");
-			static var bullet_speed_array = new Array(              7,     new Array(1,10),              2,				 5);
-			static var bullet_spread_array= new Array(              6,  			  	 4,             10,				 3);
+			static var bullet_types_array = new Array("pistol_bullet","enemy_rifle_bullet","rocket_bullet","circle_bullet",  "slow_bullet");
+			static var bullet_speed_array = new Array(              7,     new Array(1,10),              2,				 5,new Array(6,10));
+			static var bullet_spread_array= new Array(              6,  			  	 4,             10,				 3,              2);
 	// Собственно элементарная функция для получения средне-случайного значения м-ду двумя числами.
 			static function rnd_spd ( min, max ){ return  min + random(Math.round(100*(max-min)))/100 ; }
 			

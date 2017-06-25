@@ -40,10 +40,11 @@
 					export_gun (where, type, host, y0);
 				// get it specialistics based on type of gun
 					switch (type){
-						case 'simple_tommygun':					weapon_block.set_a_gun(gun, 0, 'circle_bullet', Math.PI/20, 10, 40, 80, true, 15, 1, 1, 10, 'tommy_shoot', new Array(2,3),6); break;
+						
+						case 'simple_tommygun':					weapon_block.set_a_gun(gun, 0, 'circle_bullet', Math.PI/20, 10, 40, 100, true, 15, 1, 1, 10, 'tommy_shoot', new Array(2,3),6); break;
 						case 'rocket_launcher': 				weapon_block.set_a_gun(gun, 3, "rocket_bullet", Math.PI/18, 100, 3, 90, true, 0, 1, 1, 40, "rocket_shoot", new Array(1,2,3), 5); break;
-						case 'simple_sawed_off_shotgun':		weapon_block.set_a_gun(gun, 1, "pistol_bullet", Math.PI/3, 50, 2, 120, false, 18, 2, 12, 4, "pistol_shoot", new Array(1,2,3), new Array(4,10)); break;
-						case 'simple_shotgun':					weapon_block.set_a_gun(gun, 1, "pistol_bullet", Math.PI/6,5, 1, 95, false, 10, 1, 5, 5, "pistol_shoot", new Array(1,2,3), new Array(4,10)); break;
+						case 'simple_sawed_off_shotgun':		weapon_block.set_a_gun(gun, 1, "slow_bullet", Math.PI/3, 50, 2, 120, false, 18, 2, 12, 4, "pistol_shoot", new Array(1,2,3), new Array(4,10)); break;
+						case 'simple_shotgun':					weapon_block.set_a_gun(gun, 1, "slow_bullet", Math.PI/6,5, 1, 95, false, 10, 1, 5, 5, "pistol_shoot", new Array(1,2,3), new Array(4,10)); break;
 						case 'simple_pistol':					weapon_block.set_a_gun (gun, 0); break;
 						default: _root.console_trace("# No weapon in library with type '"+type+"'"); weapon_block.set_a_gun (gun); break;
 					}

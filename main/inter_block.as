@@ -137,8 +137,8 @@
 							who.wantDrop = (who.keypresses[6] >= 1 && who.keypresses[6] <= 60);			//want to drop weapon
 							who.wantReload = (who.keypresses[4] >= 1 && who.keypresses[4] <= 60);		//want to reload a weapon
 						// if left | right pressed increase speed
-							if (who.keypresses[1]>0 && who.keypresses[0]==0) who.sp_x += who.acs * (who.sp_x < who.sp_x_max);
-							if (who.keypresses[0]>0 && who.keypresses[1]==0) who.sp_x -= who.acs * (who.sp_x > -who.sp_x_max);
+							if (who.keypresses[1]>0 && who.keypresses[0]==0) who.sp_x += who.acs * (who.sp_x + who.sp_x0 < who.sp_x_max);
+							if (who.keypresses[0]>0 && who.keypresses[1]==0) who.sp_x -= who.acs * (who.sp_x + who.sp_x0 > -who.sp_x_max);
 						// descresing speed when nothing is presseds
 							if (who.ground && !((who.keypresses[0]>0 && who.sp_x<0) || (who.keypresses[1]>0 && who.sp_x>0)))if (Math.abs(who.sp_x)>.1)who.sp_x /= who.tormoz; else who.sp_x = 0;
 						// watching a jumping
