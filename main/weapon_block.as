@@ -45,7 +45,6 @@
 					if (spread_stats == undefined)who.spread_stats = new Array(1,2,3); else who.spread_stats = spread_stats;	// массив возможных состояний вылетающих спреадиков
 					if (bullet_speed == undefined)who.bullet_speed = 'default'; else who.bullet_speed = bullet_speed;			// default - по дефолту, может быть массивом, может быть 1м числом
 					
-					
 					who.clr = new Color(who); who.missValue = 0; who.host = null; who.watchR = 0; who.ys = who._yscale; who.reload_timer = 0; 
 				// цвет для затемнения пушки, которая за спиной, мииВалуе - разброс при резкой смене пушки, хост - владелец данного экземпляра
 				// ватчР - отслеживание перезаярдки, ys - yscale - для отражения пушки по в-ли, reload_timer - внутренний таймер для перезарядки
@@ -75,7 +74,7 @@
 							return; }
 				//если есть хозяин, но пушка лежит за пазухой (не активна), то просто перемещать её за игроком
 					if (gun.host != null && gun!=gun.host.weapons[gun.host.weaponActive])	//является наактивной (проверка такая чтобы избежать переменной актив)
-						{if (Math.abs(gun._rotation) >20)gun._rotation = random(40)-20; gun._x = gun.host._x - gun._width/5; gun._y = gun.host._y + gun.host.gunYoffset; return; }
+						{if (Math.abs(gun._rotation) >20)gun._rotation = random(40)-20; gun._x = gun.host._x; gun._y = gun.host._y + gun.host.gunYoffset; return; }
 				//если хозяин есть, но он эту пушку решил выкинуть к чертям
 					if (gun.host.wantDrop){
 								gun.host.keypresses[6] = 360; gun.host.wantDrop = false; gun.host.weapons.splice(gun.host.weaponActive,1); gun.host.weaponActive--; if (gun.host.weapons.length>0 && gun.host.weaponActive < 0){gun.host.weaponActive = 0;}//вычеркнуть из списка оружия владельца и сделать следующее оружие активным

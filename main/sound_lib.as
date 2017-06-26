@@ -10,7 +10,7 @@
 			static var player_models:Array = new Array('mouse','hamster','robot','jent');					
 			static var player_sounds:Array = new Array('jump','hited','dead');
 			
-			static var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket','tommy');
+			static var weapon_types:Array = new Array('pistol','shotgun','sawed_off','rocket','tommy','lasershotgun');
 			static var weapon_actions:Array = new Array('fire','reload','equip');
 			
 			static var bullet_types:Array = new Array('bullets','shells','bombs','energys'); 	
