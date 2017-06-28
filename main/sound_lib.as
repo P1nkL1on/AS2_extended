@@ -18,7 +18,8 @@
 			
 			static var ground_types:Array = new Array('common','met','water','bullets','shells','glass','robot'); 												
 			static var ground_nums:Array = new Array(       15,    4,      4,        6,       5,	   4,      2);
-			static var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad');
+			static var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad',
+											  'npc/other/zev');
 			
 			static var sounds:Array = new Array();																											//all the sounds
 			static var all_sounds_loaded:Boolean = false;																									//обновляем загрузчик и ждем конца
@@ -97,7 +98,7 @@
 								var par = "completely "; if(loaded<libr.length)par = "partly "; if (loaded<=0)par = "was not ";
 								_root.console_trace('> Sound library '+par+'loaded ('+loaded+'/'+libr.length+')');												//сообщение о количестве загруженных звуков
 									if (par == "partly ")															// обработка незугруженных звуков
-										{	_root.console_trace("# Following sounds were not loaded");				// были загружены не все - вывести список таковых
+										{	_root.console_trace("* Following sounds were not loaded");				// были загружены не все - вывести список таковых
 											for (var i=0; i<sounds.length; i++)										// если звук забупан, то пишем об этм
 												if (sounds[i].isBoop)_root.console_trace("#   "+sounds[i].name);}
 									if (par == "was not ")															// если вообще вся библиотека не загружена, знач скорей всего
