@@ -33,7 +33,7 @@
 								inter_block.set_moveble(s,acs, tormoz, jumpBack, mass); s._x = x0; s._y = y0; s.sp_x0 = sp_x0; s.sp_y = sp_y0; s.stop();  s.ignore_ground = ignore_ground; s.timer = time;
 						// move as you want
 						// Объект удаляется со сцены если 1. его таймер истек, 2. он не касается камеры и при этом не подбираемый (для экономии памяти)., предметы остаются предметами даже если ты а них не смотришь. 
-								s.onEnterFrame = function (){ inter_block.being_moveble(this, ignore_ground); if (this.timer>0){this.timer -= _root.timeElapsed; if (this.timer<=0 || (! this.hitTest(_root.cam) && !this.isPickUp))this.removeMovieClip();} }
+								s.onEnterFrame = function (){inter_block.being_moveble(this, ignore_ground); if (this.timer>0){this.timer -= _root.timeElapsed; if (this.timer<=0 || (! this.hitTest(_root.cam) && _root.cam != undefined && !this.isPickUp))this.removeMovieClip();} }
 								s.onUnload = function (){ _root.total_objects--; }
 						// На сцене создается ссылка на последний экспортированный предмет, если надо что-нибудь поправить вручную
 								_root.last_exported = s;

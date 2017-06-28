@@ -35,12 +35,14 @@
 			
 		// где, тип пушки, Х, У (аналогично), фуловая ли? (если не фуловая, то надо будет перезарядить перед использованием)
 			static var type_based_path:String = "";
-			static function spawn_a_gun (where:MovieClip, type:String, host, y0, isFull:Boolean){
+			static function spawn_a_gun (where, type:String, host, y0, isFull:Boolean){
+					if (where == undefined || where == 'default'){ if (_root.player_layer != undefined)where = _root.player_layer; else where = _root; } 
 				// spawn a bolvan
 					export_gun (where, type, host, y0);
 				// get it specialistics based on type of gun
 					switch (type){
-						case 'laser_shotgun':					weapon_block.set_a_gun(gun, 2, 'laser_bullet', Math.PI/7, 10, 2, 200, true, 15, 2, 16, 3, 'laser_shoot', new Array(6,7,8),new Array(2,8)); break;
+						case 'fast_gun':						weapon_block.set_a_gun(gun, 0, 'circle_bullet', Math.PI/20, 60, 30, 100, true, 10, 1, 1, 7, 'tommy_shoot', new Array(2,3),8); break;
+						case 'laser_shotgun':					weapon_block.set_a_gun(gun, 2, 'laser_bullet', Math.PI/7, 10, 4, 200, true, 15, 4, 18, 3, 'laser_shoot', new Array(6,7,8),new Array(2,8)); break;
 						case 'simple_tommygun':					weapon_block.set_a_gun(gun, 0, 'circle_bullet', Math.PI/20, 10, 40, 100, true, 15, 1, 1, 10, 'tommy_shoot', new Array(2,3),6); break;
 						case 'rocket_launcher': 				weapon_block.set_a_gun(gun, 3, "rocket_bullet", Math.PI/18, 100, 3, 90, true, 0, 1, 1, 40, "rocket_shoot", new Array(1,2,3), 5); break;
 						case 'simple_sawed_off_shotgun':		weapon_block.set_a_gun(gun, 1, "slow_bullet", Math.PI/3, 50, 2, 120, false, 18, 2, 12, 4, "pistol_shoot", new Array(1,2,3), new Array(4,10)); break;

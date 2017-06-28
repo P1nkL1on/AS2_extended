@@ -9,7 +9,8 @@
 	
 		static var now_units:Number = 0;
 		static var total_units:Number = -1;
-		
+	// последний юнит
+		static var last_unit = null;
 	// Спавнит юнита из библиотеки на сцену (куда хочешь)
 	// path - указание пути к инстансу в библиотеке, where - мувиклип окр. среды
 	// AIpath - идентификатор поведенческой линии (посылается в функцию setAI beingAI и тд.)
@@ -29,12 +30,13 @@
 			// внут пр-ые
 				who.dead_timer = 0;
 			// стандартные процедуры
-				inter_block.set_moveble (who, .02, 1.04);			// все юниты перемещаются
-				who.ground = false;							// переопределение земли
+				inter_block.set_moveble (who, .02, 1.04);		// все юниты перемещаются
+				who.ground = false;								// переопределение земли
 				inter_block.set_health (who, 10, .001);			// и имеют стандартно 10 здоровья
-				inter_block.set_hitable (who, team);				// и могут быть отпинаны
-				set_AI (who, AIpath, power);				// задаем интеллект
+				inter_block.set_hitable (who, team);			// и могут быть отпинаны
+				set_AI (who, AIpath, power);					// задаем интеллект
 				who.onEnterFrame = function (){
+					
 					// какие-то общие черты всех юнитов
 						being_common (this);
 					// персональные в зависимости от АИ
@@ -52,6 +54,7 @@
 					for (var i=0; i<_root.all_hitable.length; i++){ if (_root.all_hitable[i] == this) ID = i; if (i>ID)_root.all_hitable[i-1] = _root.all_hitable[i]; }
 					if (ID < _root.all_hitable.length) _root.all_hitable.pop();
 				}
+				last_unit = who;
 		}
 		static var decay_time:Number = 600;
 		static function being_dead_remove (who:MovieClip){
@@ -79,7 +82,16 @@
 			// для обработки параметров фун-цией being_AI
 				who.AI_profile = AIpath; who.AI_power = power;
 			// общие для джентов, роботов и др
+			
+			// AFTER
+			/*
+				inter_block.set_moveble (who, .02, 1.04);		// все юниты перемещаются
+				who.ground = false;							// переопределение земли
+				inter_block.set_health (who, 10, .001);			// и имеют стандартно 10 здоровья
+				inter_block.set_hitable (who, team);			// и могут быть отпинаны
+			*/
 				switch (who.path){
+					
 					case "robot":
 								_root.attachMovie("view_field","vf_"+who, _root.getNextHighestDepth()); who.viewfield = _root["vf_"+who]; who.borned.push(who.viewfield);
 								_root.attachMovie("sound_mark","sm_"+who, _root.getNextHighestDepth()); who.hear = _root["sm_"+who];	  who.borned.push(who.hear);
@@ -97,25 +109,56 @@
 								who.targ_sp_x = 0; who.targ_sp_y = 0; who.targ_x0 = 0; who.targ_y0 = 0; who.hp2 = 0;
 							break;
 					case "jent":
+						who.sound_profile = 'jent';
+							break;
+					case "mouse":
+					case "hamster":
+							// 2.5 max spd - faster, .06 - better control
+							// 2 - normal speed,     .02 - slow cpntrol
+								//inter_block.set_controlable (this, new Array ( 65, 68, 87, 83, 82, 69, 71, 81 ), 2.5, 6);	//37, 39, 38, 40
+								
+								who.sound_profile = who.path;
+								who.acs =  .06; who.tormoz = 1.1; var wheretail = who._parent; 
+								
+								// tail spawn
+									if (who.path != 'mouse')break;
+									wheretail.attachMovie("mouse_tail",'tail_of_'+who, who.getDepth()-101); var tail = wheretail['tail_of_'+who];
+									tail.anim = 0; tail.stop(); tail.rot = 0; tail.parent = who; 
+									
+									tail.onEnterFrame = function (){
+										for (var i=0; i<_root.updates; i++) 
+											{this.anim++; _root.animate (this,1,22,20-10*(Math.abs(this.parent.sp_x)>1),1); this._rotation += (this.rot-this._rotation)/20;}
+												this.rot = (this.parent.sp_y <= 0)*((this.parent.body._xscale < 0)*(60 + 30*(this.parent.sp_y < 0))-
+													(this.parent.body._xscale > 0)*(20 + 30*(this.parent.sp_y < 0)));
+										this._x = this.parent._x;
+										this._y = this.parent._y - 20;
+									}
+	
 							break;
 					default:
 							break;
 				}
 			// частичности
 				switch (AIpath){
-					case "robot_usuall":
+					case "robot_usuall":															// обыкновенный робот (преследующий)
 								who.followX = 600; who.followY = 0; who.drops = 8; who.hpmax = 4; who.hp = 4;
 								// leave view parameters default
 								return true;
-					case "jent_passive":
+					case "jent_passive":															// пассивнейший джентельмен, шевелящий глазами
 								who.watchTo = _root.mouse; who.wY_offset = -20;
 								/*do something*/ 
 								return true;
-					case "jent_shooting":
+					case "jent_shooting":															// джентельмен, стреляющий очередями
 								who.watchTo = null; who.wY_offset = -20;
 								who.gun_timer = 0; who.drops = random(5); who.bullets = 0;				
 								return true;
-					case "none":							// default AI, just stand and being hitable
+					case "player":		
+								inter_block.set_controlable (who, new Array ( 65, 68, 87, 83, 82, 69, 71, 81 ), 2.5, 6);	//37, 39, 38, 40// персонаж, за которого играет игрок
+								weapon_block.set_a_gun_holder(who); 
+								ammo_block.set_ammo_holder(who, new Array(128,32,32,32));
+								who.followX = who._x; who.followY = who._y; who.gunYoffset = -20;
+								return true;
+					case "none":																	// default AI, just stand and being hitable
 								who.onEnterFrame = function (){
 									being_common (this);
 								}
@@ -136,6 +179,12 @@
 			
 			// общие для джентов, роботов и др
 				switch (who.path){
+					/*AFTER
+					who.InnerEnterFrame ();
+					inter_block.being_moveble (who);
+					inter_block.being_hitable (who);
+					
+					*/
 					case "robot":
 						//death
 							if (who.hp<=0){ who.sp_x = 0; drop_random_items(who); return; }
@@ -182,6 +231,11 @@
 				}
 			// ЧАСТНОСТИ для AI
 				switch (who.AI_profile){
+					case "player":
+						inter_block.being_controlable (who);
+						weapon_block.being_a_gun_holder (who);
+						who.followX = _root._xmouse; who.followY = _root._ymouse;
+						return;
 					case "none": return;
 					case "jent_passive": return;
 					case "jent_shooting":
@@ -194,7 +248,7 @@
 							if (who.gun_timer%240 == 0 && who.watchTo.hp > 0)who.bullets = Math.round((3+random(3))*who.AI_power);}}	// reloading
 						else{	drop_random_items(who);}
 						return;
-					
+					case "robot_usuall": return;
 					default: 
 						break;
 				}

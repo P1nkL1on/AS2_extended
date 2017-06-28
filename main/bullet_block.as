@@ -201,7 +201,6 @@
 				export_block.export_object ('default','shell',200+random(40), x_c, y_c,
 										speed * Math.cos(ang_c) * ky, speed * Math.sin(ang_c) * ky,.2,1.5,1, false,.3);
 				_root.last_exported.gotoAndStop(frame);
-				
 				/*
 					angl_cor = _rotation/180*Math.PI - Math.PI/4; rad = 7;						//autodetect position
 					angl_vibros = _rotation/180*Math.PI - (3+random(100)/100)*Math.PI/4;		//angle of start_fly
