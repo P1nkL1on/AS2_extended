@@ -23,7 +23,7 @@
 	// В каждом из этих случаев, не пропадает в принципе.
 	
 	// typ == { 1, 2, 3, 4 } { 'bullets', 'shells', 'energys', 'bombs' } size = {0 - minimal , 1 - medium, 2 - large}
-		static function spawn_pickup (x0:Number, y0:Number, typ, size, fadetime){
+		static function spawn_pickup (x0:Number, y0:Number, typ, size, fadetime, move_to:MovieClip){
 			if (typ == 0)typ = -1; if (size == undefined)size = 0; if (fadetime == undefined)fadetime = 120 * 10; var what_to_export = 'none';
 			
 			if (typ >= 1 && typ <= 4){ /*это патроны*/ if (size == 2) what_to_export = "pickup_large_ammo"; if (size == 1) for (var n=0;n<3; n++)spawn_pickup (x0, y0, typ, 0, fadetime); if (size == 0) what_to_export = "pickup_ammo";  }
@@ -31,5 +31,6 @@
 			
 			export_block.export_object (_root.item_layer, what_to_export, fadetime, x0 , y0, (random(200/100)-.5)*3,-random(300)/100-2, .2,1.8,1, false,.3);
 			_root.last_exported.isPickUp = true; _root.last_exported.pickUpType = typ; _root.last_exported.siz = size;
+			_root.last_exported.move_to = move_to;
 		}
 }

@@ -17,7 +17,8 @@
 		// Каждый апдейт пододвигает тело в сооттветствующую точку для ног.
 		// Исользуется только в связке с set_body();
 			static function being_body(body:MovieClip){
-				body._x = body.legs._x - 9*(body._parent.runningWall)*(.5 + .5*(body._parent.sp_y >= 0));
+				
+				body._x = body.legs._x - 9*(Math.abs(body._parent.runningWall) == 1 or body.legs.taz.can_update > 0 )*body._parent.runningWall*(.5 + .5 * (body._parent.sp_y >= 0));
 				body._y = body.legs._y + body.legs.taz._y;  body._rotation = body.legs.taz._rotation * (body.legs.taz._xscale / Math.abs(body.legs.taz._xscale));	// подгон по координатам
 				body._xscale = body._parent.sp_x / Math.abs(body._parent.sp_x ) * body.xs;																			// _xscale определяется знаком горизонтальной скорости родителя
 				if (!isNaN(body._parent.sp_x / Math.abs(body._parent.sp_x )))body._parent.wasScale = body._parent.sp_x / Math.abs(body._parent.sp_x );				// если скорость родителя 0, хитрое реешение, исользуется то, что было раньше
@@ -47,29 +48,77 @@
 		// moveble character
 		// интерфейс перемещаемого объекта. объект может перемещаться под действием сил гравитации.
 		// задаётся объект, задаются его ускорение, торможение (коэффицент около 1.005), отскок от поверхности (положительное число менее единицы), mass (коэффицент действия силы тяжести на об-т)
-			static function set_moveble (who:MovieClip, acseleration:Number, desacseleration_k:Number, jumpBack:Number,  mass:Number){
+			static function set_moveble (who:MovieClip, acseleration:Number, desacseleration_k:Number, jumpBack:Number,  mass:Number, max_sp_y:Number){
 				who.last_ground = null; 	// мувиклип последней земли, с которой взаимодействовал об-т
 				who.sp_x = 0; who.sp_x0 = 0; who.sp_y0 = 0; who.acs = acseleration;  who.tormoz = desacseleration_k;		// назначение переменных
 				who.sp_y = 0; who.ground = false; 																			// граунд - переменная бул, отвечающая за то, стоит ли сейчас на земле данный об-т
+				who.max_sp_y = max_sp_y;
 				if (mass == undefined) who.mass = 1; else who.mass = mass; if (jumpBack == undefined) who.jumpBack = 0; else who.jumpBack = jumpBack;	// дефолтное назначение второстепенных переменных
 			}
 		// being a moveble thing (даже тумбочка и золодильник должны это использывать)
 		// каждый апдейт реализует действия интерфейса moveble. Используется в свзяке с set_moveble
 		// параметром передается игнорирование земли (по дефолту false)
-			static function being_moveble (who:MovieClip, ignore_ground:Boolean){
+			/*static function being_moveble (who:MovieClip, ignore_ground:Boolean){
 				if (ignore_ground == undefined) ignore_ground = false;	// default values
 					for (var tick = 0; tick<_root.updates; tick++){		// каждый требуемый апдейт
 						if (who.ground){ who.ground = defineGround(who); if (Math.abs(who.sp_x0) > 0.1) who.sp_x0 /= who.tormoz; else who.sp_x0 = 0; }	// замедление горизонтальной скорости на земле
-						if (!who.ground){ who.sp_y += _root.G*who.mass; if (!ignore_ground){if (defineGround(who)){if (who.jumpBack == 0){ who.ground = true; who.sp_y = 0; if (who.sp_y0>0) who.sp_y0 = 0; }
+						if (!who.ground){ who.sp_y += _root.G; if (who.max_sp_y != undefined && who.sp_y > Math.abs(who.max_sp_y)) who.sp_y = Math.abs(who.max_sp_y);
+															   if (!ignore_ground){if (defineGround(who)){if (who.jumpBack == 0){ who.ground = true; who.sp_y = 0; if (who.sp_y0>0) who.sp_y0 = 0; }
 																			// при сильном отскоке проигрывать звук удара о землю, если коэффицент jumpBack != 0, то притормаживать по Х и отражать по У. В противном случае приземлить об-т, сбросить все его скорости по У, замедлять по Х
-																			/*otskok ili finish*/ else{ if (Math.abs(who.sp_y)>=1){ if (Math.abs(who.sp_y)>=4)sound_lib.footstep_sound(who); who.sp_y0 = -who.jumpBack*who.sp_y; who.sp_x0 /= who.tormoz; who.sp_y = 0;} else {who.ground = true; who.sp_y = 0; who.sp_y0 = 0;}}}}}
+																			 else{ if (Math.abs(who.sp_y)>=1){ if (Math.abs(who.sp_y)>=4)sound_lib.footstep_sound(who); who.sp_y0 = -who.jumpBack*who.sp_y; who.sp_x0 /= who.tormoz; who.sp_y = 0;} else {who.ground = true; who.sp_y = 0; who.sp_y0 = 0;}}}}}
+					// other
+						check_collision (who);
 					// walls
 						checkWallCollision (who);
 					// movement applyes
 						who._x += who.sp_x + who.sp_x0;
 						who._y += who.sp_y + who.sp_y0; 
-				}}
-		
+				}}*/
+			static function being_moveble (who:MovieClip, ignore_ground:Boolean){
+				if (ignore_ground == undefined)
+					ignore_ground = false;	// default values
+				for (var tick = 0; tick<_root.updates; tick++){		// каждый требуемый апдейт
+						if (who.ground)
+							{ 
+								who.ground = defineGround(who); 
+								if (Math.abs(who.sp_x0) > 0.1) 
+									who.sp_x0 /= who.tormoz; else who.sp_x0 = 0; 
+							}	// замедление горизонтальной скорости на земле
+						if (!who.ground){ 
+								who.sp_y += _root.G;	// если мы в воздухе, то увеличивается скорость У 
+								if (who.max_sp_y != undefined && who.sp_y > Math.abs(who.max_sp_y))
+									// если макс скорость установлена и скрость её превышает, то не допустить этого
+									who.sp_y = Math.abs(who.max_sp_y);
+								if (!ignore_ground)	// если мы не игнорим землю
+									{
+										if (defineGround(who))	// то определяем её и если столкновение, то...
+										{
+											if (who.jumpBack == 0 || Math.abs(who.sp_y + who.sp_y0) < 1)	// если отскока нет или он есть, о скорость уже потеряна
+												{
+												// при сильном отскоке проигрывать звук удара о землю, если коэффицент jumpBack != 0, то притормаживать по Х и отражать по У. В противном случае приземлить об-т, сбросить все его скорости по У, замедлять по Х
+												/*otskok ili finish*/ 
+													who.ground = true; who.sp_y = 0; 	// мы таки приземляемся, обнуляем все скорости
+													who.sp_y0 = 0; 	// её тоже, хотя кажется она нигде не исользуется
+												}
+												else
+												{ 	
+													if (Math.abs(who.sp_y)>=4) sound_lib.footstep_sound(who);	// если скорость большая, то восроизвести звук падения
+														who.sp_y0 = -who.jumpBack*who.sp_y;	// изменить скорости - сп_у переходит в сп_у0
+														who.sp_x0 /= who.tormoz;			// замедление на полную по Х
+														who.sp_y = 0;						// обнуление собственной скороси (теперь это энергия подрыгивания)
+												}
+										}
+									}
+							}
+					// other
+						check_collision (who);
+					// walls
+						checkWallCollision (who);
+					// movement applyes
+						who._x += who.sp_x + who.sp_x0;
+						who._y += who.sp_y + who.sp_y0; 
+				}
+			}
 		// define is object on ground or not
 		// используя текущее положение мувиклипа (его центра масс), определяет, касается ли он 
 		// какого-нибудь об-та из массива _root.ground_blocks
@@ -78,12 +127,15 @@
 					if (who.sp_x + who.sp_x0 == 0 && who.sp_y+who.sp_y0 == 0){return who.ground;}
 				// для каждого блока при положительной вертикальной скорсти и соответствующей коллизии, а также координатных совпадений
 				// увеличивается переменная defiend - статистическое количество подсчетов земли. Для оптимизации процессов.
-					for (var i=0; i<_root.ground_blocks.length; i++){
-						if ((++_root.defined || true) and who.sp_y + who.sp_y0 >= 0 && who.hitTest(_root.ground_blocks[i].nad) &&
-						(_root.ground_blocks[i].gr.hitTest(who._x, who._y + 1 + who.sp_y + who.sp_y0, true) || _root.ground_blocks[i].gr.hitTest(who._x, who._y + 1, true)))
-							{ who._y = _root.ground_blocks[i]._y; who.last_ground = _root.ground_blocks[i]; 
+					for (var i=0; i<_root.ground_blocks.length; i++){ ++_root.defined;
+						if (who.sp_y + who.sp_y0 >= 0 && who.hitTest(_root.ground_blocks[i].nad) &&
+						(_root.ground_blocks[i].gr.hitTest(who._x, who._y + 1 + who.sp_y + who.sp_y0, true) ||
+						 _root.ground_blocks[i].gr.hitTest(who._x, who._y + 1, true))){
+									who._y = _root.ground_blocks[i]._y; 
+									who.last_ground = _root.ground_blocks[i]; 
 									water_check (who);// water special
-								return true; } }
+									return true; 
+								}}
 				// нижний порог У координаты. Что-то вроде нижнего пола, ниже него опуститься нельзя.
 					if (who._y + who.sp_y + who.sp_y0 >= _root.StageHeight-40){ who._y = _root.StageHeight-40; return true; }
 				// если ни один из блоков не оказывается рядом, то вернуть false - объект в настоящий момент куда-то летит (падает)
@@ -129,11 +181,11 @@
 		// исользуется в связке с set_controlable
 		// отслеживает нажатие клавиш и желание сбрасывать оружие, брать оружие, взаимодейтсвовать и тд
 			static function being_controlable (who:MovieClip){
+				// rejoice with a keys
+						for (var i=0; i<who.keyBinds.length; i++) if (Key.isDown(who.keyBinds[i])) who.keypresses[i]++; else {if (_root.updates>0)who.keypresses[i]=0;}
 				for (var tick = 0; tick<_root.updates; tick++){
-					// rejoice with a keys
-						for (var i=0; i<who.keyBinds.length; i++) if (Key.isDown(who.keyBinds[i])) who.keypresses[i]++; else who.keypresses[i]=0;
-					// move accept from keys
-					// используются промежутки от 1 до 60, тк на низких кадрах можно не уследить за равенством. [n] == 1 - из-за кол-ва апдейтов в кадр.
+						// move accept from keys
+						// используются промежутки от 1 до 60, тк на низких кадрах можно не уследить за равенством. [n] == 1 - из-за кол-ва апдейтов в кадр.
 							who.wantDrop = (who.keypresses[6] >= 1 && who.keypresses[6] <= 60);			//want to drop weapon
 							who.wantReload = (who.keypresses[4] >= 1 && who.keypresses[4] <= 60);		//want to reload a weapon
 						// if left | right pressed increase speed
@@ -143,11 +195,14 @@
 							if (who.ground && !((who.keypresses[0]>0 && who.sp_x<0) || (who.keypresses[1]>0 && who.sp_x>0)))if (Math.abs(who.sp_x)>.1)who.sp_x /= who.tormoz; else who.sp_x = 0;
 						// watching a jumping
 						// wall running
-							who.runningWall = checkWallRun (who); 
+							who.runningWall = checkWallRun (who);
+							if (who.runningWall == undefined) who.runningWall = 0;	// kostil
 						// добавление звука прыжка от персонажа
-							if (who.keypresses[2] == 1 && ( who.ground || who.runningWall!=0))
-								{ 	who.sp_x0 += who.runningWall*(3); who._x += who.runningWall*(2);// смещение по x при отпрыге от стены
-									who.sp_y = -who.jump_heigth * (1-.2*(who.runningWall!=0)); who._y -= 5; who.ground = false; sound_lib.character_sound_start(who,'jump');}
+							if (who.keypresses[2] >= 1 && who.keypresses[2] <= 3 && ( who.ground || who.runningWall!=0))
+								{ 	who.keypresses[2] = 60;
+									who.sp_x0 += who.runningWall*(3); who._x += who.runningWall*(2);// смещение по x при отпрыге от стены
+									who.sp_y = -who.jump_heigth * (1-.2*(who.runningWall!=0)); 
+									who._y -= 1; who.ground = false; sound_lib.character_sound_start(who,'jump');}
 						// not working if is dead
 						// массив автоматически сбрасывается в 0, если персонаж умирает. dead - св-во интерфейса set_health
 							if (who.dead)who.keypresses = 0;
@@ -168,6 +223,7 @@
 				who.hitboxes = new Array();							// задаётся массив хитбоксов
 				_root.all_hitable.push(who);						// добавление об-та в общий массив всех вещей, которые можно ударить. 
 																	// Для проверки касания пуль и тд.
+				who.last_hited_by = null;							// объект, который нанес свой удар последним
 			}
 		// каждый апдейт интерфейса hitable - спользуется в паре с назначителем set_hitable
 		// проверяет наличие хитбоксов, выстраивает их цвет. спавнит звуки при смерте и получении урона.
@@ -207,4 +263,37 @@
 			// по дефолту возвращает обычные круги на воде
 				return "small";
 			}
+		// попытка в коллизии, как в автобусном проекте
+		// если два объекта, оба из которых принадлежат интерфейсу isUnit
+		// пересекаются своими основными массами и находятся на дистанции меньшей ширины одного из них на .5*
+		// то их sp_x и sp_y меняются  начинают отталкиваются
+			static function check_collision (who:MovieClip){
+				if (who.isUnit != true && who.isCollisionable != true)return;
+				for (var opponent = 0; opponent<_root.all_hitable.length; opponent++)
+						{
+						// если он подходит под 1 из интерфейсов, то
+							if (!(_root.all_hitable[opponent]!= who && _root.all_hitable[opponent].isUnit || _root.all_hitable[opponent].isCollisionable))continue; else ++_root.defined;
+						// высчитать дистанцию
+							if (Math.sqrt(Math.pow(who._x - _root.all_hitable[opponent]._x,2)+Math.pow(2*(who._y - _root.all_hitable[opponent]._y),2))<who._width*.5)
+								{
+									var mod = Math.sqrt(Math.pow(Math.abs(who.sp_x + who.sp_x0)+Math.abs(_root.all_hitable[opponent].sp_x+_root.all_hitable[opponent].sp_x0),2)
+													+Math.pow(Math.abs(who.sp_y + who.sp_y0)+Math.abs(_root.all_hitable[opponent].sp_y+_root.all_hitable[opponent].sp_y0),2))
+									// угол между их центраи
+									var summMass = _root.all_hitable[opponent].mass + who.mass;
+									var angle = Math.atan2(who._y - who._height/2 - _root.all_hitable[opponent]._y + _root.all_hitable[opponent]._height/2, who._x - _root.all_hitable[opponent]._x);
+									var anU = angle; var anO = angle + Math.PI;
+									var dist = -1; var power = -.2;
+									// отталкновение по оси столкновения и скорости
+									// У зависит от земельного положения (если об-т на земле, то он не вспрыгнет от столкновения)
+									// Х меняется по закону сохранения импульса
+									// trace (who+'/'+_root.all_hitable[opponent]+'/'+who.mass+'/'+_root.all_hitable[opponent].mass);
+									// изменение по Х
+										who._x -= dist*Math.cos(anU); _root.all_hitable[opponent]._x -= dist*Math.cos(anO);
+											who.sp_x0 += mod/2*Math.cos(anU+Math.PI)*power*( who.mass / summMass );  
+											_root.all_hitable[opponent].sp_x0 += mod/2*Math.cos(anO+Math.PI)*power*( _root.all_hitable[opponent].mass / summMass );
+									// изменение по У	
+										who._y -= dist/2*Math.sin(anU); _root.all_hitable[opponent]._y -= dist/2*Math.sin(anO);
+											who.sp_y += mod/2*Math.sin(anU+Math.PI)*power*(!who.ground)*( who.mass / summMass ); 
+											_root.all_hitable[opponent].sp_y += mod/2*Math.sin(anO+Math.PI)*power*(!_root.all_hitable[opponent].ground)*( _root.all_hitable[opponent].mass / summMass );
+				}}}
 }

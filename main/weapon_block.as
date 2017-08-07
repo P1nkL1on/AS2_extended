@@ -8,7 +8,10 @@
 			static var shadow_level = 75;	
 		// существо, которое может держать пушку (предположительно любую)
 		// устанавливает массив пушек пустым, активное оружие -1, pQ, wA, wL - предыдущие значения этимх перемененных (wL == weapon.length)
-			static function set_a_gun_holder (gunner:MovieClip){ gunner.weapons = new Array(); gunner.weaponActive = -1; gunner.pQ = 0; gunner.wA = -1; gunner.wL = 0;  }			
+			static function set_a_gun_holder (gunner:MovieClip){ 
+				gunner.weapons = new Array(); gunner.weaponActive = -1; gunner.pQ = 0; gunner.wA = -1; gunner.wL = 0;
+				gunner.reload_multiply = 1; gunner.temp_multiply = 1;
+			}			
 		
 		// каждый апдейт на держателе пушек
 			static function being_a_gun_holder (gunner:MovieClip){
@@ -74,7 +77,7 @@
 							return; }
 				//если есть хозяин, но пушка лежит за пазухой (не активна), то просто перемещать её за игроком
 					if (gun.host != null && gun!=gun.host.weapons[gun.host.weaponActive])	//является наактивной (проверка такая чтобы избежать переменной актив)
-						{if (Math.abs(gun._rotation) >20)gun._rotation = random(40)-20; gun._x = gun.host._x; gun._y = gun.host._y + gun.host.gunYoffset; return; }
+						{if (Math.abs(gun._rotation) >20)gun._rotation = random(40)-20; gun._x = gun.host._x + gun.host.sp_x + gun.host.sp_x0; gun._y = gun.host._y + gun.host.gunYoffset + gun.host.sp_y; return; }
 				//если хозяин есть, но он эту пушку решил выкинуть к чертям
 					if (gun.host.wantDrop){
 								gun.host.keypresses[6] = 360; gun.host.wantDrop = false; gun.host.weapons.splice(gun.host.weaponActive,1); gun.host.weaponActive--; if (gun.host.weapons.length>0 && gun.host.weaponActive < 0){gun.host.weaponActive = 0;}//вычеркнуть из списка оружия владельца и сделать следующее оружие активным
@@ -101,22 +104,22 @@
 							if (gun.reload_timer == 0 && gun.watch1 == 1 && !(gun.current_ammo >= gun.ammo_per_shot && ((gun.ammo_type<0)||(gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))))sound_lib.sound_start('items/no_ammo');
 						//reload
 							if (gun.reload_timer<=0 && ((gun.current_ammo > 0 && gun.watch1 != 1 && gun.host.wantReload) || (gun.current_ammo == 0 && gun.watch1 + gun.host.wantReload*1==1)))
-								{ gun.reload_timer += gun.reloadFull; gun.ost = gun.current_ammo; gun.current_ammo = gun.ammo; gun.gotoAndStop('hand_reload'); gun.reload_base.gotoAndStop(1);  }
+								{ gun.reload_timer += gun.reloadFull * gun.host.reload_multiply; gun.ost = gun.current_ammo; gun.current_ammo = gun.ammo; gun.gotoAndStop('hand_reload'); gun.reload_base.gotoAndStop(1);  }
 						//shoot
 						// если гашетка зажата и оружие автоматическое или она нажата 1 раз, а оружие неавтоматическое, притом в этом кадре еще не стреляли, притом таймер на нуле
 							if (!shot_this_frame && gun.reload_timer<=0 && ((!gun.automatic && gun.watch1 == 1) || (gun.automatic && gun.watch1 > 0))){ /*SHOT*/ 
 								//attach a bullet
 										shot_this_frame = true;																																									// в этот кадр уже стреляли
 									if (gun.current_ammo >= gun.ammo_per_shot && ((gun.ammo_type<0)||(gun.ammo_type>=0 && gun.host.Ammo[gun.ammo_type] >= gun.ammo_per_shot))){ gun.current_ammo -= gun.ammo_per_shot;  gun.host.Ammo[gun.ammo_type] -= gun.ammo_per_shot;
-										if (gun.current_ammo > 0) {gun.reload_timer += gun.realoadPartly; gun.gotoAndStop('fire');}																								// обойма езе не кончилась \ спавн звук выстрела
-															else  {gun.reload_timer += gun.realoadPartly+gun.reloadFull; gun.current_ammo = gun.ammo; gun.gotoAndStop('reload'); gun.reload_base.gotoAndStop(1); gun.ost = 0;}	// обойма кончилась \ спавн звук перезарядки
+										if (gun.current_ammo > 0) {gun.reload_timer += gun.realoadPartly*gun.host.temp_multiply; gun.gotoAndStop('fire');}																								// обойма езе не кончилась \ спавн звук выстрела
+															else  {gun.reload_timer += gun.realoadPartly*gun.host.temp_multiply+gun.reloadFull*gun.host.reload_multiply; gun.current_ammo = gun.ammo; gun.gotoAndStop('reload'); gun.reload_base.gotoAndStop(1); gun.ost = 0;}	// обойма кончилась \ спавн звук перезарядки
 										var dulo_x = gun._x + Math.cos(gun._rotation/180*Math.PI) * (gun.dulo._x)  + Math.cos(gun._rotation/180*Math.PI+Math.PI/2) * gun.dulo._y *gun._yscale/gun.ys;							// просчет точки вылета пули из ствола
 										var dulo_y = gun._y + Math.sin(gun._rotation/180*Math.PI) * (gun.dulo._x)  + Math.sin(gun._rotation/180*Math.PI+Math.PI/2) * gun.dulo._y*gun._yscale/gun.ys;
 										var where = _root.enemy_bullets; if (gun.host.team == 1)where = _root.hero_bullets;
 										export_block.export_effect (where, gun.effect_path+"", dulo_x, dulo_y, gun._rotation/180*Math.PI);
 										for (var shot=0; shot<gun.bullet_per_shot; shot++){																																		// для каждой пули спавнить ее и увеличивать отдачу
 												gun.ot_dist += gun.otdat; 
-												gun.host.sp_x0 += - 0.02*gun.otdat * Math.cos(gun._rotation / 180 * Math.PI);
+												gun.host.sp_x0 += - 0.02*gun.otdat * Math.cos(gun._rotation / 180 * Math.PI)*(1-.6*(gun.host.ground && Math.abs(gun.host.sp_x + gun.host.sp_x0)<.2));	// отдача снижена в 10 раз, если ты на земле
 												bullet_block.spawn_a_bullet (where, gun.bullet_type, dulo_x, dulo_y, gun.bullet_speed, gun._rotation/180*Math.PI + random(Math.round(gun.bullet_spread*1000))/1000 - gun.bullet_spread/2, 'default', gun.spread_stats, gun.host);}}// bullet_spawn
 								}
 							}					

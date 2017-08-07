@@ -19,7 +19,7 @@
 			static var ground_types:Array = new Array('common','met','water','bullets','shells','glass','robot'); 												
 			static var ground_nums:Array = new Array(       15,    4,      4,        6,       5,	   4,      2);
 			static var also:Array = new Array('weapons/rocket/reload_1','items/ammo_pack','items/no_ammo','items/bombs/hit_medium',"npc/other/alert",'enviropment/jumppad',
-											  'npc/other/zev');
+											  'npc/other/zev','npc/other/warning');
 			
 			static var sounds:Array = new Array();																											//all the sounds
 			static var all_sounds_loaded:Boolean = false;																									//обновляем загрузчик и ждем конца
@@ -28,8 +28,8 @@
 				if (libr.length > 0){_root.console_trace ('@ Sound library recompiled');return;}
 					 
 					for (var i=0; i<player_models.length; i++)for (var j=0; j<player_sounds .length; j++) libr.push("npc/voice/"+player_models[i]+'/'+player_sounds [j]);
-					for (var i=0; i<weapon_types.length; i++)for (var j=0; j<weapon_actions.length; j++) libr.push("weapons/"+weapon_types[i]+'/'+weapon_actions[j]);	// папка с звуками оружия
-					for (var i=0; i<bullet_types.length; i++)for (var j=0; j<bullet_actions.length; j++) libr.push("items/"+bullet_types[i]+'/'+bullet_actions[j]);	// папка с звуками пуль
+					for (var i=0; i<weapon_types.length; i++)for (var j=0; j<weapon_actions.length; j++) libr.push("weapons/"+weapon_types[i]+'/'+weapon_actions[j]);		// папка с звуками оружия
+					for (var i=0; i<bullet_types.length; i++)for (var j=0; j<bullet_actions.length; j++) libr.push("items/"+bullet_types[i]+'/'+bullet_actions[j]);			// папка с звуками пуль
 					for (var i=0; i<ground_types.length; i++)for (var j=1; j<=ground_nums[i]; j++)libr.push("npc/footsteps/"+ground_types[i]+'/'+'stp'+j);					// папка с звуками шагов
 					for (var i=0; i<3; i++)libr.push('items/health'+i);
 					for (var i=0; i<also.length; i++) libr.push(also[i]);

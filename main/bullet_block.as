@@ -55,7 +55,7 @@
 						b.onUnload = function (){ _root.total_bullets--; }
 				// spawn spread
 				// Также заставить появится спреды. spread_stat - случайный из предложенных состояний спреда. (влияет на его кадр). Появляется в том-же месте с теми же начальными координатами.
-					for (var i= 0; i<spread; i++){var spread_stat = spread_stats[random(spread_stats.length)];  spawn_a_spread (where, x0, y0, ang, spd, spread_stat, .001*(random(6)+5)+1);}
+					for (var i= 0; i<spread; i++){var spread_stat = spread_stats[random(spread_stats.length)];  spawn_a_spread (where, x0, y0, ang, spd, spread_stat, .001*(random(6)+10)+1);}
 				// На корне появляется сссылка на последнюю созданную пулю. На случай, если надо будет ещё что-то подправить вручную.
 					_root.last_bullet = b;
 			}
@@ -64,6 +64,7 @@
 		// spd_bul - скорость пули хозяина. (Замечание: нигде не фигурирует привязка спреда к пули, т.е. они независимы. Не знаю, хорошо ли это.)
 		// degrad - коэффицент, по которому уменьшается размер спреда со временем. Больше единицы, стремится к ней сверху. Стандартные значения около 1.005
 			static function spawn_a_spread (where:MovieClip,  x0, y0, ang, spd_bul, stat, degrad){// return;
+				if (_root.spread_disable) return;
 				// Все действия ф-ции аналогичны действияем в предыдущей ф-ции.
 				sprd++; _root.total_spreads ++;
 						where.attachMovie("bullet_fly_out", "bl_sprd"+sprd, where.getNextHighestDepth()); var s = where["bl_sprd"+sprd];
@@ -91,7 +92,9 @@
 						if (((target.team != 1 && bullet._parent == _root.hero_bullets) || (target.team != 2 && bullet._parent == _root.enemy_bullets))			// Если пуля и цель не являются союзниками
 							&& target.hitTest(bullet._x, bullet._y, true)) for (var i=0; i<target.hitboxes.length; i++)if ( bullet.hitTest(target.hitboxes[i]) )// И если цель касается центра масс пули, а пуля касается одного из его хибоксов
 						// Пуля отправляется в анимацию смерти, урон нанесен, хитбокс, в который попали делаем красным (трассировка), снимаем здоровье цели, увеличиваем её скорости по х. Возвращаем попадание.
-							{ bullet.gotoAndStop('dead');for (var f=0; f<bullet.frame_offset; f++)bullet.nextFrame(); bullet.damage_done = true; target.hitboxes[i].colors.hurted._alpha = 100; target.hp-= bullet.damage; target.sp_x0 += .1*bullet.spd*Math.cos(bullet.ang);	 target.sp_y += .1*bullet.spd*Math.sin(bullet.ang);// collision action
+							{ bullet.gotoAndStop('dead');for (var f=0; f<bullet.frame_offset; f++)bullet.nextFrame(); bullet.damage_done = true; target.hitboxes[i].colors.hurted._alpha = 100; 
+							target.hp-= bullet.damage; 	target.last_hited_by = bullet.host;// пострадавший получает заслуженный урон и записывает нападавшего
+							target.sp_x0 += .1*bullet.spd*Math.cos(bullet.ang);	 target.sp_y += .1*bullet.spd*Math.sin(bullet.ang);// collision action
 							if (target.hpmax>0){target.hitBy = bullet.host; var trc = '~ '+getname(bullet.host)+' deals '+bullet.damage+' dmg. to '+getname(target)+' '; if (target.hp<=0 && !target.dead) trc ='~ '+getname(target)+' killed by '+getname(bullet.host)+' ';_root.console_trace(trc);} return true; }																		// trace
 				} return false; }	// Ни с чем пока не соприкасется.
 			static function getname (who:MovieClip):String{
@@ -117,7 +120,7 @@
 					
 					if (dist < Rad){var damage = damage_min + Math.round(dist/Rad*(damage_max - damage_min)); 
 						if (target.hpmax>0){ 
-						target.hp -= damage;   if (damage>0)for (var i=0; i<target.hitboxes.length; i++)target.hitboxes[i].colors.hurted._alpha = 100;	// красный цвет хитбоксов
+						target.hp -= Math.round(100 * damage * (1 - dist / Rad))/100;   if (damage>0)for (var i=0; i<target.hitboxes.length; i++)target.hitboxes[i].colors.hurted._alpha = 100;	// красный цвет хитбоксов
 						var ang = Math.atan2(y0 - target._y + target._height/2, x0 - target._x); target.sp_x0 -= (2+.1*damage)*Math.cos(ang); target.sp_y -= (2+.1*damage)*Math.sin(ang);	// отталкивать
 						_root.console_trace("~ "+getname(target)+' receive '+damage+' dmg. from explosion');}}		//calculating damage
 				}
@@ -172,7 +175,7 @@
 				}else{		// bullet dead animation
 						if (!who.sounded){ who.sounded = true; sound_lib.sound_start(who.hit_sound); }	// sound of hitting an object
 						gotoAndStop(who.dead_frame+who.frame_offset);								// go to 'dead' frame
-						if (who.end._currentframe >= who.dead_effect_frame)who.removeMovieClip();
+						if (who.end._currentframe >= who.dead_effect_frame || (_root.effect_disable == true && who.end._currentframe > 1))who.removeMovieClip();
 				}
 			}
 		// 
